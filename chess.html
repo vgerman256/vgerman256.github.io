@@ -187,16 +187,32 @@
         console.log("Font: " + ctx.font)
         ctx.font = "12px sans-serif"
 
-        // white letters
+        // white letters (top) - rotated 180 degrees
         ctx.fillStyle = blackBoxColor;
         const leters1 = leters.toUpperCase();
+        ctx.save();
         for (let i = 0; i < 8; i++) {
-            ctx.fillText(leters1[i], i * 75 + 55, 12);
+            ctx.save();
+            ctx.translate(i * 75 + 55, 5);
+            ctx.rotate(Math.PI); // 180 degrees
+            ctx.fillText(leters1[i], 0, 0);
+            ctx.restore();
+        }
+        ctx.restore();
+
+        // white letters (bottom) - normal orientation
+        for (let i = 0; i < 8; i++) {
+            ctx.fillText(leters1[i], i * 75 + 55, 635);
         }
 
-        // white numbers
+        // white numbers (left side)
         for (let i = 0; i < 8; i++) {
             ctx.fillText(8 - i, 10, i * 75 + 64);
+        }
+
+        // white numbers (right side)
+        for (let i = 0; i < 8; i++) {
+            ctx.fillText(8 - i, 625, i * 75 + 64);
         }
     }
 
