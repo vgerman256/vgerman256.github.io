@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chess</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+</head>
+
+<body>
+    <header>
+        <h3 align="center">Let's play aginst a chess robot.</h3>
+    </header>
+    <br>
+    <p align="center">
+    <div style="display: flex;">
+        <div style="position: relative; display: inline-block;">
+            <canvas id="chessBorder" width="640" height="640"
+                style="border:1px solid #ffffff;position: absolute; left: 0; top: 0;"></canvas>
+            <canvas id="chessCanvas" width="600" height="600"
+                style="border:1px solid rgb(0, 0, 0);position: relative; margin: 20px; border: 2px solid #333;"></canvas>
+        </div>
+        <div>
+            <h3 style="margin-left: 20px;">History</h3>
+            <ol id="movesHistiry" class="scroll-list" reversed></ol>
+        </div>
+    </div>
+    </p>
+
+    <div class="button-container" style="margin-left: 20px;">
+        <p>Game complexity:
+            <input type="number" id="difficultyInput" min="0" max="20" value="1"> of 20.
+        </p>
+
+        <button type="button" id="newGame">Start new game!</button>
+        <button type="button" onclick='undoMove()'>Undo</button>
+    </div>
+    <br>
+    <div id="boardStatus">
+
+    </div>
+    <a href="index.html">Дом</a>
+</body>
+
+<script type="module">
+    import { Chess, Move } from './js/chess.js';
+    // Экспортируем класс в глобальную область
+    window.Chess = Chess;
+    window.Move = Move;
+
+    const game = new Chess();
+    window.chessGame = game; // Если хотите управлять этой же партией из консоли
+
+    console.log("Библиотека готова!");
+
+    function initNewChessGame() {
+        const game = new Chess();
+        window.chessGame = game; // Если хотите управлять этой же партией из консоли
+    }
+
+    window.initNewChessGame = initNewChessGame;
+</script>
+
+<script src="./js/StockfishWeb.js"></script>
+
+<script>
+    let stateBoardJs = []
+
+    const whiteColor = '#646363'
+    const blackColor = 'black'
+
+    const blackBoxColor = '#253238'
+    const whiteBoxColor = 'white'
+
+    const computerLastMoveColor = '#6e03b6'
+
+    let selectedSquare = [-1, -1];
+
+    let selectedPiece = ''
+    let possibleMovesVerbose = []
+
+    const pieceToUtf8Image = new Map([
+        ['p', '\u2659'],
+        ['r', '\u2656'],
+        ['n', '\u2658'],
+        ['b', '\u2657'],
+        ['q', '\u2655'],
+        ['k', '\u2654'],
+
+        ['P', '\u265F'],
+        ['R', '\u265C'],
+        ['N', '\u265E'],
+        ['B', '\u265D'],
+        ['Q', '\u265B'],
+        ['K', '\u265A']
+    ]);
+
+    const leters = "abcdefgh";
+
+    const openBtn = document.getElementById('newGame');
+    const diffInput = document.getElementById('difficultyInput');
+
+    // Открытие диалога
+    openBtn.addEventListener('click', () => {
+        const level = diffInput.value;
+        setEngineDifficulty(level);
+        drawChess();
+    });
+
+    var wasmSupported = typeof WebAssembly === 'object' && WebAssembly.validate(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+
+    // ToDo: make it lazy!
+    let stockfishWeb = new StockfishWeb(wasmSupported ? './js/stockfish.wasm.js' : './js/stockfish.js');
+
+    async function setEngineDifficulty(level) {
+        await stockfishWeb.setEngineDifficulty(level)
+        diffInput.readOnly = true;
+    }
+
+    async function getComputerMoveAsync(move) {
+        let fenPos = move.after;
+        return await stockfishWeb.getBestMoveFen(fenPos);
+    }
+
+    function addGameResult(item) {
+        const htmlMovesHistory = document.querySelector('#movesHistiry');
+        let li = document.createElement('li');
+        li.textContent = item;
+        htmlMovesHistory.prepend(li)
+    }
+
+    function updateMoveHistory() {
+        let history = window.chessGame.history({ verbose: true })
+        const htmlMovesHistory = document.querySelector('#movesHistiry');
+
+        htmlMovesHistory.innerHTML = history.toReversed()
+            .map(move => {
+                let p = move.color == 'b'
+                    ? move.piece.toUpperCase()
+                    : move.piece;
+                let line = `${pieceToUtf8Image.get(p)} ${move.from} - ${move.to}`;
+                return `<li>${line}</li>`;
+            }).join('');
+    }
+
+    function clearChess() {
+        const canvas = document.getElementById("chessCanvas");
+        const ctx = canvas.getContext("2d");
+
+        ctx.fillStyle = 'white'; //"#f4f7fb";
+        ctx.fillRect(0, 0, 600, 600);
+    }
+
+    async function initStockfishWeb() {
+        await stockfishWeb.init();
+
+        const move = await stockfishWeb.getBestMove('e2e4', 1000);
+        console.log('Лучший ответ от Stockfish:', move); // например, "b8c6"
+    }
+
+    function initNewGame() {
+        window.initNewChessGame();
+        var board = window.chessGame.board();
+        stateBoardJs = [...board]
+
+        initStockfishWeb();
+
+        showNotification("New game started, white moves first!");
+    }
+
+    function drawCoordinates() {
+        const canvas = document.getElementById("chessBorder");
+        const ctx = canvas.getContext("2d");
+
+        console.log("Font: " + ctx.font)
+        ctx.font = "12px sans-serif"
+
+        // white letters
+        ctx.fillStyle = blackBoxColor;
+        const leters1 = leters.toUpperCase();
+        for (let i = 0; i < 8; i++) {
+            ctx.fillText(leters1[i], i * 75 + 55, 12);
+        }
+
+        // white numbers
+        for (let i = 0; i < 8; i++) {
+            ctx.fillText(8 - i, 10, i * 75 + 64);
+        }
+    }
+
+    // 0, 0  -> a8
+    function toChessNotation(x, y) {
+        return `${leters[x]}${8 - y}`
+    }
+
+    // a7 -> 0, 1
+    function fromChessNotation(a1) {
+        return [parseInt(leters.indexOf(a1[0])), 8 - parseInt(a1[1])]
+    }
+
+    function handleSelect(ctx, xC, yC) {
+        // deselect old
+        if (selectedSquare[0] == -1) {
+            let c = colorFromPos(selectedSquare[0], selectedSquare[1]);
+            drawSelected(ctx, selectedSquare[0], selectedSquare[1], c);
+        }
+
+        selectedSquare[0] = xC;
+        selectedSquare[1] = yC;
+        drawSelected(ctx, xC, yC)
+
+        let p = getStateBoard(selectedSquare[0], selectedSquare[1]);
+        if (p) {
+            let pos = toChessNotation(selectedSquare[0], selectedSquare[1])
+            console.log("Event: Slected " + p + ' at ' + pos);
+            let pMoves = window.chessGame.moves({ square: pos, verbose: false })
+            console.log(`Possible Moves raw: ${pMoves}`)
+
+            let pMovesV = window.chessGame.moves({ square: pos, verbose: true })
+            console.log(`Possible Moves verbose: ${objToString(pMovesV)}`)
+
+            selectedPiece = p;
+            possibleMovesVerbose = pMovesV;
+            addPossibleMovesBlueDots(ctx);
+        } else {
+            possibleMovesVerbose = []
+        }
+    }
+
+    function objToString(obj) {
+        if (Array.isArray(obj)) {
+            let aText = '['
+            let first = true;
+            obj.forEach(o => {
+                aText += objToString(o) + ", ";
+            });
+
+            aText += ']'
+            return aText;
+        }
+
+        let text = "";
+        for (let x in obj) {
+            text += x + ":" + obj[x] + ", ";
+        };
+
+        return text;
+    }
+
+    function handleCanvasClick(event) {
+        const canvas = document.getElementById('chessCanvas');
+        const rect = canvas.getBoundingClientRect();
+        const ctx = canvas.getContext("2d");
+
+        // Calculate coordinates relative to the canvas
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        console.log("Event: x = " + x + " y = " + y);
+        var xC = Math.trunc(x / 75);
+        var yC = Math.trunc(y / 75);
+        console.log("Event: xC = " + xC + " yC = " + yC);
+
+        const newSelected = [xC, yC]
+
+        // not yet selected
+        if (selectedSquare[0] == -1) {
+            console.log("Event: Select");
+            handleSelect(ctx, xC, yC);
+        } else if (!compareArrays(selectedSquare, newSelected)) {
+            // deselect old
+            let [xWas, yWas] = selectedSquare;
+            drawSelected(ctx, xWas, yWas, colorFromPos(xWas, yWas));
+            let p = getStateBoard(xWas, yWas)
+
+            let cTo = toChessNotation(xC, yC);
+            let allowedUserMove = possibleMovesVerbose.find(v => v.to == cTo)
+            if (p && allowedUserMove) {
+                try {
+                    let moveResult = window.chessGame.move(allowedUserMove);
+                    console.log("Move: " + objToString(moveResult));
+
+                    updateStateBoard(ctx, window.chessGame.board(), moveResult);
+                    updateMoveHistory();
+                    let canMove = handleGameState(moveResult);
+                    if (canMove) {
+                        getComputerMoveAsync(moveResult).then(computerMove => {
+                            let computerMoveResult = window.chessGame.move(computerMove);
+                            updateStateBoard(ctx, window.chessGame.board(), computerMoveResult);
+                            updateMovedSelection(ctx)
+                            updateMoveHistory()
+                            handleGameState(computerMoveResult);
+                        });
+                    }
+                } catch (error) {
+                    console.log(`Bad move: ${simpleMove}`)
+                    removePossibleMovesBlueDots(ctx);
+                    return;
+                }
+
+                // clear blue dots
+                removePossibleMovesBlueDots(ctx);
+
+                selectedSquare = [-1, -1];
+                console.log("Event: Move Piece: " + p);
+            } else {
+                removePossibleMovesBlueDots(ctx);
+                handleSelect(ctx, xC, yC);
+                console.log("Event: Select 1");
+            }
+        } else {
+            removePossibleMovesBlueDots(ctx);
+            let c = colorFromPos(selectedSquare[0], selectedSquare[1]);
+            drawSelected(ctx, selectedSquare[0], selectedSquare[1], c);
+
+            selectedSquare = [-1, -1];
+            console.log("Event: Deselect");
+        }
+    }
+
+    function handleGameState(move) {
+        var nextTurn = window.chessGame.turn();
+        let prevColor = nextTurn == 'w' ? 'Black' : 'White'
+        let nextColor = nextTurn == 'b' ? 'Black' : 'White'
+
+        if (move.isCapture()) {
+            let cp = pieceToUtf8Image.get(move.captured);
+            showNotification(`${cp} captured!`)
+        }
+        if (move.isPromotion()) {
+            let cp = pieceToUtf8Image.get(move.promotion);
+            showNotification(`${cp} promotion!`)
+        }
+
+        if (window.chessGame.isGameOver()) {
+            if (window.chessGame.isDraw()) {
+                let msg = "Draw! No winers..."
+                showNotification(msg)
+                addGameResult("1/2-1/2")
+                addGameResult(msg)
+            } else {
+                var msg = `${prevColor} won`
+                showNotification(`${msg}!`)
+                addGameResult(nextTurn == 'w' ? "0-1" : "1-0")
+                addGameResult(msg)
+            }
+
+            diffInput.readOnly = false;
+            return false;
+        }
+
+        if (window.chessGame.isCheck()) {
+            showNotification(`Check to ${nextColor}!`)
+        }
+
+        return true;
+    }
+
+    function undoMove() {
+        const canvas = document.getElementById('chessCanvas');
+        const ctx = canvas.getContext("2d");
+        console.log("Undo last move: next turns " + window.chessGame.turn())
+        updateMovedSelection(ctx, true)
+
+        for (var i = 0; i < 2; ++i) {
+            let move1 = window.chessGame.undo();
+            if (!move1) {
+                showNotification("Nothing to undo!")
+                return;
+            }
+
+            console.log(`Undone move: ${objToString(move1)}`)
+            updateStateBoard(ctx, window.chessGame.board(), move1)
+        }
+
+        console.log("Next turns: " + window.chessGame.turn())
+    }
+
+    function isEqualObj(a, b) {
+        return JSON.stringify(a) === JSON.stringify(b);
+    }
+
+    function updateStateBoard(ctx, newBoardJs, move) {
+        stateBoardJs = newBoardJs;
+
+        let [fx, fy] = fromChessNotation(move.from)
+        let [tx, ty] = fromChessNotation(move.to)
+
+        updateStateAt(ctx, fx, fy);
+
+        let lineUpdate = move.isKingsideCastle() || move.isQueensideCastle()
+        if (!lineUpdate) {
+            updateStateAt(ctx, tx, ty);
+        } else {
+            for (var x = 0; x < 8; x++) {
+                updateStateAt(ctx, x, ty);
+            }
+        }
+        if (move.isEnPassant()) {
+            updateStateAt(ctx, tx, fy);
+        }
+    }
+
+    function updateMovedSelection(ctx, isforUndo = false) {
+        let history = window.chessGame.history({ verbose: true })
+        var last3 = history.slice(-3);
+
+        if (isforUndo && last3.length == 3)
+            last3.reverse();
+        else if (isforUndo && last3.length != 3) {
+            drawSelectedMove(ctx, last3.pop())
+            return;
+        }
+
+        if (last3.length == 3) {
+            drawSelectedMove(ctx, last3[0]);
+        }
+
+        drawSelectedMove(ctx, last3.pop(), computerLastMoveColor)
+    }
+
+    function addPossibleMovesBlueDots(ctx) {
+        possibleMovesVerbose.forEach(move => {
+            let [x, y] = fromChessNotation(move.to);
+            drawBlueDot(ctx, posToC(x) + 32, posToC(y) + 32)
+        });
+    }
+
+    function removePossibleMovesBlueDots(ctx) {
+        possibleMovesVerbose.forEach(move => {
+            let [x, y] = fromChessNotation(move.to);
+            updateStateAt(ctx, x, y);
+        });
+
+        possibleMovesVerbose = []
+        selectedPiece = ''
+    }
+
+    function drawSelected(ctx, xC, yC, color = 'blue') {
+        console.log("Event: " + color);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(posToC(xC), posToC(yC), 75, 75);
+    }
+
+    function drawSelectedMove(ctx, move, color) {
+        [fromChessNotation(move.from), fromChessNotation(move.to)]
+            .forEach(([x, y]) =>
+                drawSelected(ctx, x, y, color ? color : colorFromPos(x, y)));
+    }
+
+    function colorFromPos(xC, yC) {
+        if (yC % 2 == 0 && xC % 2 == 0) {
+            return whiteBoxColor;
+        }
+        if (yC % 2 != 0 && xC % 2 != 0)
+            return whiteBoxColor;
+        return blackBoxColor;
+    }
+
+    function fillBoard(ctx) {
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                updateStateAt(ctx, j, i)
+            }
+        }
+    }
+
+    function getStateBoard(x, y) {
+        var p = stateBoardJs[y][x];
+        if (!p)
+            return p;
+
+        if (p.color == 'b')
+            return p.type.toUpperCase();
+        return p.type;
+    }
+
+    function updateStateAt(ctx, x, y) {
+        let piece = getStateBoard(x, y);
+        let color = colorFromPos(x, y);
+        ctx.fillStyle = color;
+        ctx.fillRect(posToC(x), posToC(y), 75, 75);
+
+        drawPiece(ctx, 32 + posToC(x), 32 + posToC(y), piece)
+    }
+
+    function drawChess() {
+        const canvas = document.getElementById("chessCanvas");
+        canvas.addEventListener('click', handleCanvasClick);
+        const ctx = canvas.getContext("2d");
+
+        initNewGame(); //stateBoard
+        fillBoard(ctx);
+
+        drawCoordinates()
+        console.log('Can move:', window.chessGame.moves());
+    }
+
+    function posToC(x) {
+        return 75 * x;
+    }
+
+    function isWhitePiece(piece) {
+        return piece === piece.toLowerCase() &&
+            piece !== piece.toUpperCase();
+    }
+
+    function drawPiece(ctx, x, y, piece) {
+        // R Q - black rook and black queen
+        // r k - white rook and white king
+
+        let symbol = '';
+        if (piece) {
+            let color = isWhitePiece(piece) ? whiteColor : blackColor;
+            symbol = pieceToUtf8Image.get(piece);
+            ctx.fillStyle = color;
+        }
+
+        ctx.font = '50px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(symbol, x, y);
+    }
+
+    function drawBlueDot(ctx, x, y, color = '') {
+        ctx.fillStyle = color == '' ? 'blue' : color;
+        ctx.strokeStyle = color == '' ? 'black' : color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 7 * Math.PI);
+        ctx.stroke();
+        ctx.fill();
+    }
+
+    function compareArrays(a, b) {
+        return a.length === b.length &&
+            a.every((element, index) => element === b[index]);
+    }
+
+    function showNotification(message) {
+        const div = document.createElement("div");
+        div.textContent = message;
+        div.style.position = "fixed";
+        div.style.top = "20px";
+        div.style.right = "20px";
+        div.style.padding = "10px 20px";
+        div.style.background = "#333";
+        div.style.color = "#fff";
+        div.style.borderRadius = "5px";
+
+        document.body.appendChild(div);
+
+        setTimeout(() => {
+            div.remove();
+        }, 3000);
+    }
+
+</script>
+
+</html>
