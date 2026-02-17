@@ -12,7 +12,7 @@
 
 <body>
     <header>
-        <h3 align="center">Can defeat a chess robot?</h3>
+        <h2 align="center">Can defeat a chess robot?</h2>
     </header>
     <br>
     <p align="center">
@@ -69,13 +69,14 @@
 <script>
     let stateBoardJs = []
 
-    const whiteColor = '#646363'
-    const blackColor = 'black'
+    const whiteColor = '#2D2D2D'
+    const blackColor = '#1A1A1A'
 
-    const blackBoxColor = '#253238'
-    const whiteBoxColor = 'white'
+    const blackBoxColor = '#6B4423'
+    const whiteBoxColor = '#F5F5DC'
 
-    const computerLastMoveColor = '#6e03b6'
+    const computerLastMoveColor = '#4A90D9'
+    const blueDotColor = 'blue'
 
     let selectedSquare = [-1, -1];
 
@@ -446,10 +447,10 @@
         selectedPiece = ''
     }
 
-    function drawSelected(ctx, xC, yC, color = 'blue') {
+    function drawSelected(ctx, xC, yC, color = blueDotColor) { // '#4A90D9'
         console.log("Event: " + color);
         ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.strokeRect(posToC(xC), posToC(yC), 75, 75);
     }
 
@@ -519,24 +520,30 @@
     function drawPiece(ctx, x, y, piece) {
         // R Q - black rook and black queen
         // r k - white rook and white king
-
-        let symbol = '';
-        if (piece) {
-            let color = isWhitePiece(piece) ? whiteColor : blackColor;
-            symbol = pieceToUtf8Image.get(piece);
-            ctx.fillStyle = color;
-        }
-
         ctx.font = '50px serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+
+        let symbol = '';
+
+        if (piece) {
+            symbol = pieceToUtf8Image.get(piece);
+
+            let color = isWhitePiece(piece) ? whiteColor : blackColor;
+            ctx.fillStyle = color;
+
+            // Add stroke for better visibility on both square colors
+            ctx.strokeStyle = isWhitePiece(piece) ? '#FFFFFF' : '#000000';
+            ctx.lineWidth = 1;
+            ctx.strokeText(symbol, x, y);
+        }
+
         ctx.fillText(symbol, x, y);
     }
 
-    function drawBlueDot(ctx, x, y, color = '') {
-        ctx.fillStyle = color == '' ? 'blue' : color;
-        ctx.strokeStyle = color == '' ? 'black' : color;
-        ctx.lineWidth = 1;
+    function drawBlueDot(ctx, x, y, color = blueDotColor) { // '#4A90D9' AI suggest
+        ctx.fillStyle = color == '' ? blueDotColor : color;
+        ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.arc(x, y, 5, 0, 7 * Math.PI);
         ctx.stroke();
