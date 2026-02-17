@@ -1,13 +1,25 @@
-body {background-color: powderblue;}
+body {
+    background-color: powderblue;
+}
+
 h1 {
     color: darkblue;
     font-family: verdana;
 }
+
 h4 {
     color: auto;
     font-family: verdana;
 }
+
 p {
     color: auto;
     font-family: verdana;
+}
+
+.scroll-list {
+    max-height: 580px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 0px solid #ccc;
 }
