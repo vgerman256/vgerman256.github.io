@@ -47,18 +47,18 @@
 
 <script type="module">
     import { Chess, Move } from './js/chess.js';
-    // Экспортируем класс в глобальную область
+    // export to the global area
     window.Chess = Chess;
     window.Move = Move;
 
     const game = new Chess();
-    window.chessGame = game; // Если хотите управлять этой же партией из консоли
+    window.chessGame = game;
 
     console.log("Библиотека готова!");
 
     function initNewChessGame() {
         const game = new Chess();
-        window.chessGame = game; // Если хотите управлять этой же партией из консоли
+        window.chessGame = game;
     }
 
     window.initNewChessGame = initNewChessGame;
@@ -100,11 +100,11 @@
 
     const leters = "abcdefgh";
 
-    const openBtn = document.getElementById('newGame');
+    const newGameButton = document.getElementById('newGame');
     const diffInput = document.getElementById('difficultyInput');
 
     // Открытие диалога
-    openBtn.addEventListener('click', () => {
+    newGameButton.addEventListener('click', () => {
         const level = diffInput.value;
         setEngineDifficulty(level);
         drawChess();
@@ -158,7 +158,7 @@
         await stockfishWeb.init();
 
         const move = await stockfishWeb.getBestMove('e2e4', 1000);
-        console.log('Лучший ответ от Stockfish:', move); // например, "b8c6"
+        console.log('Best answe Stockfish:', move); // liek "b8c6"
     }
 
     function initNewGame() {
@@ -492,7 +492,7 @@
         canvas.addEventListener('click', handleCanvasClick);
         const ctx = canvas.getContext("2d");
 
-        initNewGame(); //stateBoard
+        initNewGame();
         fillBoard(ctx);
 
         drawCoordinates()
