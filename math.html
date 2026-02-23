@@ -425,7 +425,7 @@
 
             // Рассчитываем новый масштаб пропорционально изменению расстояния
             const delta = currentDist / initialDist;
-            const newScale = initialScale * delta;
+            const newScale = Math.min(Math.max(initialScale * delta, 5), 500);
 
             const ratio = newScale / oldScale;
 
@@ -433,7 +433,7 @@
             centerY = e.clientY - (e.clientY - centerY) * ratio;
 
             // Применяем ваши ограничения
-            scale = Math.min(Math.max(newScale, 5), 500);
+            scale = newScale;
 
             drawGraph();
         }
@@ -462,18 +462,18 @@
         scale = newScale;
         drawGraph();
     }, { passive: false });
-/*
-    window.addEventListener('wheel', (e) => {
-        // РР·РјРµРЅСЏРµРј РјР°СЃС€С‚Р°Р±: РїСЂРѕРєСЂСѓС‚РєР° РІРІРµСЂС… вЂ” СѓРІРµР»РёС‡РёРІР°РµРј, РІРЅРёР· вЂ” СѓРјРµРЅСЊС€Р°РµРј
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        scale *= delta;
-
-        // Ограничения, чтобы не уйти в бесконечность
-        scale = Math.min(Math.max(scale, 5), 500);
-        drawGraph();
-
-    }, { passive: false });
-*/
+    /*
+        window.addEventListener('wheel', (e) => {
+            // РР·РјРµРЅСЏРµРј РјР°СЃС€С‚Р°Р±: РїСЂРѕРєСЂСѓС‚РєР° РІРІРµСЂС… вЂ” СѓРІРµР»РёС‡РёРІР°РµРј, РІРЅРёР· вЂ” СѓРјРµРЅСЊС€Р°РµРј
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            scale *= delta;
+    
+            // Ограничения, чтобы не уйти в бесконечность
+            scale = Math.min(Math.max(scale, 5), 500);
+            drawGraph();
+    
+        }, { passive: false });
+    */
     window.addEventListener('touchend', () => {
         touchZoom = undefined; // Сбрасываем  при отпускании пальцев
     });
