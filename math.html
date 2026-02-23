@@ -20,15 +20,18 @@
             <div id="functions-list">
             </div>
             <button id="add-func" style="margin-top: 10px; cursor: pointer;">+ Add funcion</button>
-            <button id="reset-func" style="margin-top: 10px; cursor: pointer;">Remove All</button>
+            <button id="reset-func" style="margin-top: 10px; cursor: pointer; margin-left: 10px;">Remove All</button>
             <div
                 style="margin-top: 15px; color: #777; font-size: 0.85em; border-top: 1px solid #333; padding-top: 10px;">
                 <strong>Hint:</strong> Use JavaScript syntax.<br>
                 Available: <code>Math.sin(x)</code>, <code>Math.cos(x)</code>, <code>Math.abs(x)</code>,
                 <code>Math.pow(x, 3)</code>, <code>x * x</code>
             </div>
-            <button id="zoom-in" style="margin-top: 10px; cursor: pointer;">Zoom in</button>
-            <button id="zoom-out" style="margin-top: 10px; cursor: pointer;">Zoom out</button>
+            <div
+                style="margin-top: 15px; color: #777; font-size: 0.85em; border-top: 1px solid #333; padding-top: 10px;">
+                <button id="zoom-in" style="margin-top: 10px; cursor: pointer;">Zoom in</button>
+                <button id="zoom-out" style="margin-top: 10px; cursor: pointer; margin-left: 10px;">Zoom out</button>
+            </div>
         </div>
         <a href="index.html">Home</a>
     </main>
@@ -404,12 +407,7 @@
     window.addEventListener('wheel', (e) => {
         // Изменяем масштаб: прокрутка вверх — увеличиваем, вниз — уменьшаем
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        scale *= delta;
-
-        // Ограничения, чтобы не уйти в бесконечность
-        scale = Math.min(Math.max(scale, 5), 500);
-
-        drawGraph();
+        drawZoom(delta)
     });
 
 
@@ -448,9 +446,25 @@
         }
     }, { passive: false });
 
-    window.addEventListener('touchend', () => {
+    window.addEventListener('zoom-in', () => {
         touchZoom = undefined; // Сбрасываем  при отпускании пальцев
     });
+
+    document.getElementById('zoom-in').onclick = () => {
+        drawZoom(1.1)
+    };
+
+    document.getElementById('zoom-out').onclick = () => {
+        drawZoom(0.9)
+    };
+
+    function drawZoom(delta) {
+        scale *= delta;
+
+        // Ограничения, чтобы не уйти в бесконечность
+        scale = Math.min(Math.max(scale, 5), 500);
+        drawGraph();
+    }
 
     renderInputs();
     drawGraph();
