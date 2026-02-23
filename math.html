@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Math grapher</title>
     <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.16.0/dist/pixi.min.js"></script>
-    <link rel="stylesheet" href="css/styles.css" type="text/css">
+    <link rel="stylesheet" href="css/mainstyle.css" type="text/css">
 </head>
 
 <body>
@@ -27,11 +27,13 @@
                 Available: <code>Math.sin(x)</code>, <code>Math.cos(x)</code>, <code>Math.abs(x)</code>,
                 <code>Math.pow(x, 3)</code>, <code>x * x</code>
             </div>
+            <button id="zoom-in" style="margin-top: 10px; cursor: pointer;">Zoom in</button>
+            <button id="zoom-out" style="margin-top: 10px; cursor: pointer;">Zoom out</button>
         </div>
         <a href="index.html">Home</a>
     </main>
     <footer>
-        <p>Built with ❤️ using HTML & CSS.</p>
+        <p>Built with ❤️ using HTML, CSS, JS, and Pixi!</p>
     </footer>
 </body>
 
@@ -398,6 +400,43 @@
         scale = Math.min(Math.max(scale, 5), 500);
 
         drawGraph();
+    });
+
+    // Функция для расчета расстояния между двумя пальцами
+    const getDistance = (touches) => {
+        return Math.hypot(
+            touches[0].pageX - touches[1].pageX,
+            touches[0].pageY - touches[1].pageY
+        );
+    };
+
+    window.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            // Запоминаем начальное расстояние и текущий масштаб
+            initialDist = getDistance(e.touches);
+            initialScale = scale;
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialDist !== null) {
+            e.preventDefault(); // Предотвращаем стандартный зум браузера
+
+            const currentDist = getDistance(e.touches);
+
+            // Рассчитываем новый масштаб пропорционально изменению расстояния
+            const delta = currentDist / initialDist;
+            scale = initialScale * delta;
+
+            // Применяем ваши ограничения
+            scale = Math.min(Math.max(scale, 5), 500);
+
+            drawGraph();
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => {
+        initialDist = null; // Сбрасываем при отпускании пальцев
     });
 
     renderInputs();
