@@ -402,6 +402,9 @@
         drawGraph();
     });
 
+    let initialDist = undefined; // Расстояние между пальцами в начале жеста
+    let initialScale = 1;   // Масштаб в начале жеста
+
     // Функция для расчета расстояния между двумя пальцами
     const getDistance = (touches) => {
         return Math.hypot(
@@ -419,7 +422,7 @@
     }, { passive: false });
 
     window.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && initialDist !== null) {
+        if (e.touches.length === 2 && initialDist) {
             e.preventDefault(); // Предотвращаем стандартный зум браузера
 
             const currentDist = getDistance(e.touches);
@@ -436,7 +439,7 @@
     }, { passive: false });
 
     window.addEventListener('touchend', () => {
-        initialDist = null; // Сбрасываем при отпускании пальцев
+        initialDist = undefined; // Сбрасываем при отпускании пальцев
     });
 
     renderInputs();
