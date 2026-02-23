@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Math grapher</title>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.16.0/dist/pixi.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css" type="text/css">
+</head>
+
+<body>
+    <header>
+        <h3>Math Grapher</h3>
+        <p>A tool for visualizing graphs of mathematical functions for educational and research purposes.</p>
+    </header>
+    <main>
+        <div id="game-container"></div>
+        <div id="controls" style="padding: 15px; background: #1a1a1a; color: white; font-family: sans-serif;">
+            <div id="functions-list">
+            </div>
+            <button id="add-func" style="margin-top: 10px; cursor: pointer;">+ Add funcion</button>
+            <button id="reset-func" style="margin-top: 10px; cursor: pointer;">Remove All</button>
+            <div
+                style="margin-top: 15px; color: #777; font-size: 0.85em; border-top: 1px solid #333; padding-top: 10px;">
+                <strong>Hint:</strong> Use JavaScript syntax.<br>
+                Available: <code>Math.sin(x)</code>, <code>Math.cos(x)</code>, <code>Math.abs(x)</code>,
+                <code>Math.pow(x, 3)</code>, <code>x * x</code>
+            </div>
+        </div>
+        <a href="index.html">Home</a>
+    </main>
+    <footer>
+        <p>Built with ❤️ using HTML & CSS.</p>
+    </footer>
+</body>
+
+<script type="module">
+    /**
+    * Статус проекта: PixiJS Grapher
+    * Реализовано: 
+    * - Отрисовка нескольких функций y=f(x) через new Function
+    * - Динамическая сетка с переменным шагом
+    * - Panning (перетаскивание) и Zoom (колесико)
+    * - Валидация ввода (красная рамка) и LocalStorage
+    * - "Липкие" оси (Sticky Axes) и координаты под мышью
+    */
+
+    // Ключ для хранения в браузере
+    const STORAGE_KEY = 'pixi_graph_functions';
+
+    const defaultFunctions = [
+        { id: Date.now(), formula: 'x * x', color: '#00ff00', visible: true }
+    ];
+
+    // Загружаем из LocalStorage или используем дефолт, если там пусто
+    let functions = JSON.parse(localStorage.getItem(STORAGE_KEY)) ||
+        defaultFunctions;
+
+    function saveToStorage() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(functions));
+    }
+
+    function resetAll() {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload(); // Перезагрузит страницу с дефолтными настройками
+    }
+
+    const listContainer = document.getElementById('functions-list');
+
+    // Функция создания UI для строки графика
+    function renderInputs() {
+        listContainer.innerHTML = '';
+        functions.forEach((func, index) => {
+            const row = document.createElement('div');
+            row.style.marginBottom = '10px';
+
+            // Проверяем валидность формулы для подсветки
+            const isValid = !isNaN(evaluateY(func.formula, 1));
+            const borderColor = isValid ? '#444' : '#ff4444';
+
+            row.innerHTML = `
+            <button onclick="toggleVisibility(${index})" style="background:none; border:none; cursor:pointer; font-size:18px; vertical-align:middle; width:30px;">
+                ${func.visible ? '👁️' : '🕶️'}
+            </button>
+            <span style="color: #888; font-family: monospace;">y = </span>
+            <input type="text" 
+                   class="formula-input" 
+                   data-index="${index}" 
+                   value="${func.formula}" 
+                   style="width: 250px; padding: 5px; border-radius: 4px; border: 2px solid ${borderColor}; background: #333; color: white;">
+            <input type="color" 
+                   class="color-input" 
+                   data-index="${index}" 
+                   value="${func.color}" 
+                   style="vertical-align: middle; cursor: pointer;">
+            <button onclick="removeFunc(${index})" style="color: #ff5555; background: none; border: none; cursor: pointer; font-size: 18px; vertical-align: middle;">✕</button>
+        `;
+            listContainer.appendChild(row);
+        });
+    }
+
+    // Слушатели событий для инпутов
+    listContainer.addEventListener('input', (e) => {
+        const index = e.target.dataset.index;
+        if (e.target.classList.contains('formula-input')) {
+            const formula = e.target.value;
+            functions[index].formula = formula;
+
+            // ВАЛИДАЦИЯ "НА ЛЕТУ"
+            // Проверяем формулу на тестовом значении (например, x = 1)
+            const result = evaluateY(formula, 1);
+            const isValid = result !== undefined && !isNaN(result);
+
+            // Меняем цвет рамки текущего инпута без перерисовки всего списка
+            e.target.style.borderColor = isValid ? '#444' : '#ff4444';
+        }
+
+        if (e.target.classList.contains('color-input')) {
+            functions[index].color = e.target.value;
+        }
+
+        saveToStorage();
+        drawGraph(); // Перерисовываем график на холсте
+    });
+
+
+    window.toggleVisibility = (index) => {
+        functions[index].visible = !functions[index].visible;
+
+        saveToStorage();
+        renderInputs(); // Перерисовываем кнопки (глазик)
+        drawGraph();    // Перерисовываем графики на холсте
+    };
+
+    document.getElementById('add-func').onclick = () => {
+        functions.push({ id: Date.now(), formula: 'Math.sin(x)', color: '#ff00ff', visible: true });
+
+        renderInputs();
+        saveToStorage();
+        drawGraph();
+    };
+
+    document.getElementById('reset-func').onclick = () => {
+        resetAll();
+    }
+
+    window.removeFunc = (index) => {
+        functions.splice(index, 1);
+        if (functions.length === 0) {
+            functions.push({ id: Date.now(), formula: '0', color: '#ffffff', visible: true });
+        }
+
+        renderInputs();
+        saveToStorage();
+        drawGraph();
+    };
+
+    // Универсальный вычислитель
+    function evaluateY(formula, x) {
+        try {
+            const f = new Function('x', 'Math', `return ${formula};`);
+            return f(x, Math);
+        } catch {
+            return undefined;
+        }
+    }
+
+    const gameContainer = document.getElementById('game-container');
+    const app = new PIXI.Application();
+
+    await app.init({
+        resizeTo: gameContainer,
+        autoDensity: true, // Поддержка Retina/High-DPI экранов
+        antialias: true,
+        backgroundColor: 0x1099bb
+    });
+
+    gameContainer.appendChild(app.canvas)
+
+    // 4. Создаем графический объект (например, красный квадрат)
+    const graph = new PIXI.Graphics();
+    app.stage.addChild(graph);
+
+    const labelsContainer = new PIXI.Container();
+    app.stage.addChild(labelsContainer);
+
+    let scale = 40; // Начальный масштаб (пикселей на 1 единицу)
+    let centerX = app.screen.width / 2;
+    let centerY = app.screen.height / 2;
+    let isDragging = false;
+    let lastMousePos = { x: 0, y: 0 };
+
+    app.stage.eventMode = 'static'; // Включаем интерактивность для сцены
+    app.stage.hitArea = app.screen; // Область клика — весь экран
+
+    // Меняем курсор на "руку"
+    app.canvas.style.cursor = 'grab';
+
+    app.stage.on('pointerdown', (e) => {
+        isDragging = true;
+        lastMousePos = { x: e.global.x, y: e.global.y };
+        app.canvas.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('pointerup', () => {
+        isDragging = false;
+        app.canvas.style.cursor = 'grab';
+    });
+
+    app.stage.on('pointermove', (e) => {
+        const mouseX = e.global.x;
+        const mouseY = e.global.y;
+
+        // 1. Пересчитываем экранные координаты в математические
+        const mathX = ((mouseX - centerX) / scale).toFixed(2);
+        const mathY = (-(mouseY - centerY) / scale).toFixed(2); // Инвертируем Y
+
+        // 2. Обновляем текст и позицию тултипа
+        tooltip.text = `(${mathX}, ${mathY})`;
+        tooltip.x = mouseX + 15; // Смещение вправо от курсора
+        tooltip.y = mouseY - 25; // Смещение чуть выше курсора
+        tooltip.visible = true;
+
+        if (isDragging) {
+            // Вычисляем, на сколько сдвинулась мышь
+            const dx = e.global.x - lastMousePos.x;
+            const dy = e.global.y - lastMousePos.y;
+
+            // Сдвигаем центр координат
+            centerX += dx;
+            centerY += dy;
+
+            // Обновляем позицию для следующего шага
+            lastMousePos = { x: e.global.x, y: e.global.y };
+
+            // Перерисовываем всё
+            drawGraph();
+        }
+    });
+
+    // Скрываем координаты, когда мышь уходит с холста
+    app.stage.on('pointerleave', () => {
+        tooltip.visible = false;
+    });
+
+    app.canvas.addEventListener('dblclick', () => {
+        centerX = app.screen.width / 2;
+        centerY = app.screen.height / 2;
+        scale = 40;
+        drawGraph();
+    });
+
+    // Вспомогательный стиль для текста
+    const textStyle = new PIXI.TextStyle({
+        fontSize: 14,
+        fill: 0xaaaaaa,
+    });
+
+    const tooltip = new PIXI.Text({
+        text: '',
+        style: {
+            fontSize: 14,
+            fill: 0xffffff,
+            dropShadow: { alpha: 0.5, blur: 2, color: '#000000', distance: 1 }
+        }
+    });
+    tooltip.visible = false; // Скрыт по умолчанию
+    app.stage.addChild(tooltip);
+
+    function getOptimalStep(currentScale) {
+        const minSpacing = 50; // Минимальное расстояние между линиями в пикселях
+        const availableSteps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+
+        // Ищем минимальный шаг, который даст расстояние > minSpacing
+        for (let s of availableSteps) {
+            if (s * currentScale >= minSpacing) return s;
+        }
+
+        // Если масштаб совсем крошечный (сильное отдаление)
+        const power = Math.pow(10, Math.ceil(Math.log10(minSpacing / currentScale)));
+        return power;
+    }
+
+    function drawGraph() {
+        graph.clear();
+        labelsContainer.removeChildren();
+
+        const dynamicStep = getOptimalStep(scale); // Получаем 1, 2, 5 или 10...
+
+        // 2. Рисуем оси
+        graph.setStrokeStyle({ width: 2, color: 0xffffff });
+
+        // Плавающая ось X (горизонтальная)
+        // Ограничиваем Y-координату оси так, чтобы она не выходила за пределы экрана (с отступом 2px)
+        const stickyY = Math.max(2, Math.min(app.screen.height - 2, centerY));
+        graph.moveTo(0, stickyY).lineTo(app.screen.width, stickyY);
+
+        // Плавающая ось Y (вертикальная)
+        const stickyX = Math.max(2, Math.min(app.screen.width - 2, centerX));
+        graph.moveTo(stickyX, 0).lineTo(stickyX, app.screen.height);
+
+        graph.stroke();
+
+        // 1. Динамическая сетка
+        graph.setStrokeStyle({ width: 1, color: 0x333333 });
+
+        // Вертикальные линии (X)
+        const leftBound = Math.floor(-centerX / (scale * dynamicStep));
+        const rightBound = Math.ceil((app.screen.width - centerX) / (scale * dynamicStep));
+
+        for (let i = leftBound; i <= rightBound; i++) {
+            const xPos = centerX + i * dynamicStep * scale;
+
+            // Рисуем числа только для текущего шага
+            if (i !== 0) {
+                graph.moveTo(xPos, 0).lineTo(xPos, app.screen.height);
+                const xText = new PIXI.Text({ text: (i * dynamicStep).toString(), style: textStyle });
+                xText.x = xPos;
+                // Прижимаем текст к нижней части оси, но не даем уйти за экран
+                xText.y = Math.max(5, Math.min(app.screen.height - 25, stickyY + 5));
+                xText.anchor.set(0.5, 0);
+                labelsContainer.addChild(xText);
+            }
+        }
+
+        // Горизонтальные линии (Y)
+        const topBound = Math.floor((centerY - app.screen.height) / (scale * dynamicStep));
+        const bottomBound = Math.ceil(centerY / (scale * dynamicStep));
+
+        for (let i = topBound; i <= bottomBound; i++) {
+            const yPos = centerY - i * dynamicStep * scale;
+
+            if (i !== 0) {
+                graph.moveTo(0, yPos).lineTo(app.screen.width, yPos);
+                const yText = new PIXI.Text({ text: (i * dynamicStep).toString(), style: textStyle });
+                // Прижимаем текст к левой части оси
+                yText.x = Math.max(35, Math.min(app.screen.width - 10, stickyX - 10));
+                yText.y = yPos;
+                yText.anchor.set(1, 0.5);
+                labelsContainer.addChild(yText);
+            }
+        }
+
+        const zeroText = new PIXI.Text({ text: '0', style: textStyle });
+        zeroText.x = Math.max(15, Math.min(app.screen.width - 15, stickyX - 10));
+        zeroText.y = Math.max(5, Math.min(app.screen.height - 25, stickyY + 5));
+        zeroText.anchor.set(1, 0);
+        labelsContainer.addChild(zeroText);
+
+        graph.stroke();
+
+        // 3. Рисуем функции
+        // Отрисовка всех функций из массива
+        functions.forEach(func => {
+            if (!func.visible)
+                return;
+
+            const hexColor = parseInt(func.color.replace('#', '0x'));
+            graph.setStrokeStyle({ width: 3, color: hexColor });
+
+            let first = true;
+            let hasError = false;
+
+            for (let screenX = 0; screenX <= app.screen.width; screenX += 2) {
+                let x = (screenX - centerX) / scale;
+                let y = evaluateY(func.formula, x);
+
+                if (isNaN(y)) {
+                    hasError = true;
+                    continue;
+                }
+
+                let screenY = centerY - y * scale;
+
+                if (first) {
+                    graph.moveTo(screenX, screenY);
+                    first = false;
+                } else {
+                    if (screenY > -1000 && screenY < app.screen.height + 1000) {
+                        graph.lineTo(screenX, screenY);
+                    } else {
+                        graph.moveTo(screenX, screenY);
+                    }
+                }
+            }
+            graph.stroke();
+        });
+    }
+
+    // Обработка колесика мыши
+    window.addEventListener('wheel', (e) => {
+        // Изменяем масштаб: прокрутка вверх — увеличиваем, вниз — уменьшаем
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        scale *= delta;
+
+        // Ограничения, чтобы не уйти в бесконечность
+        scale = Math.min(Math.max(scale, 5), 500);
+
+        drawGraph();
+    });
+
+    renderInputs();
+    drawGraph();
+</script>
+
+</html>
