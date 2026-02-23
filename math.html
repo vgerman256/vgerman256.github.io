@@ -222,6 +222,10 @@
     });
 
     app.stage.on('pointermove', (e) => {
+        if (touchZoom) {
+            return
+        }
+
         const mouseX = e.global.x;
         const mouseY = e.global.y;
 
