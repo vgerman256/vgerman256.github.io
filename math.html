@@ -398,14 +398,6 @@
         });
     }
 
-    // Обработка колесика мыши
-    window.addEventListener('wheel', (e) => {
-        // Изменяем масштаб: прокрутка вверх — увеличиваем, вниз — уменьшаем
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        drawZoom(delta)
-    });
-
-
     // Функция для расчета расстояния между двумя пальцами
     const getDistance = (touches) => {
         return Math.hypot(
@@ -429,29 +421,62 @@
             const initialScale = touchZoom[1];
 
             const currentDist = getDistance(e.touches);
+            const oldScale = scale;
 
             // Рассчитываем новый масштаб пропорционально изменению расстояния
             const delta = currentDist / initialDist;
-            scale = initialScale * delta;
+            const newScale = initialScale * delta;
+
+            const ratio = newScale / oldScale;
+
+            centerX = e.clientX - (e.clientX - centerX) * ratio;
+            centerY = e.clientY - (e.clientY - centerY) * ratio;
 
             // Применяем ваши ограничения
-            scale = Math.min(Math.max(scale, 5), 500);
+            scale = Math.min(Math.max(newScale, 5), 500);
 
             drawGraph();
         }
     }, { passive: false });
 
-    window.addEventListener('touchend', () => {
-        touchZoom = undefined; // Сбрасываем  при отпускании пальцев
-    });
+    window.addEventListener('wheel', (e) => {
+        e.preventDefault(); // Предотвращаем прокрутку страницы
 
-    function drawZoom(delta) {
+        const zoomSpeed = 0.1;
+        const delta = e.deltaY > 0 ? 1 - zoomSpeed : 1 + zoomSpeed;
+
+        // 1. Запоминаем старый масштаб
+        const oldScale = scale;
+
+        // 2. Вычисляем новый масштаб с ограничениями
+        const newScale = Math.min(Math.max(scale * delta, 5), 500);
+
+        // 3. Вычисляем коэффициент изменения
+        const ratio = newScale / oldScale;
+
+        // 4. Корректируем смещение (offsetX/offsetY), чтобы точка под мышкой осталась на месте
+        // offsetX и offsetY — это переменные панорамирования вашего графика
+        centerX = e.clientX - (e.clientX - centerX) * ratio;
+        centerY = e.clientY - (e.clientY - centerY) * ratio;
+
+        scale = newScale;
+        drawGraph();
+    }, { passive: false });
+/*
+    window.addEventListener('wheel', (e) => {
+        // РР·РјРµРЅСЏРµРј РјР°СЃС€С‚Р°Р±: РїСЂРѕРєСЂСѓС‚РєР° РІРІРµСЂС… вЂ” СѓРІРµР»РёС‡РёРІР°РµРј, РІРЅРёР· вЂ” СѓРјРµРЅСЊС€Р°РµРј
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
         scale *= delta;
 
         // Ограничения, чтобы не уйти в бесконечность
         scale = Math.min(Math.max(scale, 5), 500);
         drawGraph();
-    }
+
+    }, { passive: false });
+*/
+    window.addEventListener('touchend', () => {
+        touchZoom = undefined; // Сбрасываем  при отпускании пальцев
+    });
 
     renderInputs();
     drawGraph();
