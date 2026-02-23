@@ -423,14 +423,17 @@
             const currentDist = getDistance(e.touches);
             const oldScale = scale;
 
+            const clientX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const clientY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
             // Рассчитываем новый масштаб пропорционально изменению расстояния
             const delta = currentDist / initialDist;
             const newScale = Math.min(Math.max(initialScale * delta, 5), 500);
 
             const ratio = newScale / oldScale;
 
-            centerX = e.clientX - (e.clientX - centerX) * ratio;
-            centerY = e.clientY - (e.clientY - centerY) * ratio;
+            centerX = clientX - (clientX - centerX) * ratio;
+            centerY = clientY - (clientY - centerY) * ratio;
 
             // Применяем ваши ограничения
             scale = newScale;
