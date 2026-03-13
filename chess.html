@@ -35,13 +35,22 @@
             <input type="number" id="difficultyInput" min="0" max="20" value="1"> of 20.
         </p>
 
-        <button type="button" id="newGame">Start new game!</button>
-        <button type="button" onclick='undoMove()'>Undo</button>
+        <button type="button" id="newGameButton">Start new game</button>
+        <button disabled type="button" id="undoButton" onclick='undoMove()'>Undo</button>
+        <button disabled type="button" id="surrenderButton">Surrender</button>
     </div>
     <br>
-    <div id="boardStatus">
 
-    </div>
+    <dialog id="surrenderDialog">
+        <p>Surrender to the robot... Are you sure?</p>
+        <form method="dialog">
+            <button value="yes">Yes</button>
+            <button value="cancel">Cancel</button>
+        </form>
+    </dialog>
+
+    <div id="notification-container"></div>
+
     <a style="margin-left: 20px;" href="index.html">Home</a>
 </body>
 
@@ -53,8 +62,6 @@
 
     const game = new Chess();
     window.chessGame = game;
-
-    console.log("Библиотека готова!");
 
     function initNewChessGame() {
         const game = new Chess();
@@ -101,14 +108,47 @@
 
     const leters = "abcdefgh";
 
-    const newGameButton = document.getElementById('newGame');
-    const diffInput = document.getElementById('difficultyInput');
+    const newGameButton = document.getElementById('newGameButton');
+    const difficultyInput = document.getElementById('difficultyInput');
+    const surrenderButton = document.getElementById('surrenderButton');
+    const surrenderDialog = document.getElementById('surrenderDialog');
+    const undoButton = document.getElementById('undoButton');
 
-    // Открытие диалога
     newGameButton.addEventListener('click', () => {
-        const level = diffInput.value;
+        const level = difficultyInput.value;
         setEngineDifficulty(level);
+
+        initNewGame();
+
         drawChess();
+        updateMoveHistory();
+        updateButtonsState();
+    });
+
+    function defaultButtonState() {
+        let isGgameInProgress = false;
+        difficultyInput.disabled = isGgameInProgress;
+        newGameButton.disabled = isGgameInProgress;
+        surrenderButton.disabled = !isGgameInProgress;
+        undoButton.disabled = !isGgameInProgress;
+    }
+
+    function updateButtonsState() {
+        let isGgameInProgress = window.chessGame && !window.chessGame.isGameOver();
+        difficultyInput.disabled = isGgameInProgress;
+        newGameButton.disabled = isGgameInProgress;
+        surrenderButton.disabled = !isGgameInProgress;
+        undoButton.disabled = !isGgameInProgress;
+    }
+
+    surrenderButton.addEventListener('click', () => {
+        surrenderDialog.showModal();
+    });
+
+    surrenderDialog.addEventListener('close', () => {
+        if (surrenderDialog.returnValue === 'yes') {
+            surrenderGame();
+        }
     });
 
     var wasmSupported = typeof WebAssembly === 'object' && WebAssembly.validate(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
@@ -118,7 +158,6 @@
 
     async function setEngineDifficulty(level) {
         await stockfishWeb.setEngineDifficulty(level)
-        diffInput.readOnly = true;
     }
 
     async function getComputerMoveAsync(move) {
@@ -133,10 +172,41 @@
         htmlMovesHistory.prepend(li)
     }
 
+    function initNewGame() {
+        window.initNewChessGame();
+        var board = window.chessGame.board();
+        stateBoardJs = [...board]
+
+        initStockfishWeb();
+
+        showNotification("New game started, white moves first!");
+    }
+
+    function setEmptyBoard() {
+        for (var j = 0; j < 8; ++j) {
+            stateBoardJs[j] = new Array(8)
+        }
+    }
+
+    const htmlMovesHistory = document.querySelector('#movesHistiry');
+    function clearBoard() {
+        setEmptyBoard();
+        drawChess();
+
+        defaultButtonState();
+        htmlMovesHistory.innerHTML = '';
+    }
+
+    function surrenderGame() {
+        clearBoard()
+        var msg = "Black won, white surrendered"
+        showNotification(`${msg}!`)
+        updateMoveHistory()
+        addGameResult(msg)
+    }
+
     function updateMoveHistory() {
         let history = window.chessGame.history({ verbose: true })
-        const htmlMovesHistory = document.querySelector('#movesHistiry');
-
         htmlMovesHistory.innerHTML = history.toReversed()
             .map(move => {
                 let p = move.color == 'b'
@@ -167,17 +237,7 @@
         await stockfishWeb.init();
 
         const move = await stockfishWeb.getBestMove('e2e4', 1000);
-        console.log('Best answe Stockfish:', move); // liek "b8c6"
-    }
-
-    function initNewGame() {
-        window.initNewChessGame();
-        var board = window.chessGame.board();
-        stateBoardJs = [...board]
-
-        initStockfishWeb();
-
-        showNotification("New game started, white moves first!");
+        console.log('Best answe Stockfish:', move); // like "b8c6"
     }
 
     function drawCoordinates() {
@@ -372,7 +432,7 @@
                 addGameResult(msg)
             }
 
-            diffInput.readOnly = false;
+            updateButtonsState();
             return false;
         }
 
@@ -512,12 +572,11 @@
         drawPiece(ctx, 32 + posToC(x), 32 + posToC(y), piece)
     }
 
-    function drawChess() {
-        const canvas = document.getElementById("chessCanvas");
-        canvas.addEventListener('click', handleCanvasClick);
-        const ctx = canvas.getContext("2d");
+    const chessMaincanvas = document.getElementById("chessCanvas");
+    chessMaincanvas.addEventListener('click', handleCanvasClick);
 
-        initNewGame();
+    function drawChess() {
+        const ctx = chessMaincanvas.getContext("2d");
         fillBoard(ctx);
 
         drawCoordinates()
@@ -571,24 +630,49 @@
             a.every((element, index) => element === b[index]);
     }
 
+
+    let notificationQueue = [];
+    let isWaitingToPost = false;
+
     function showNotification(message) {
-        const div = document.createElement("div");
-        div.textContent = message;
-        div.style.position = "fixed";
-        div.style.top = "20px";
-        div.style.right = "20px";
-        div.style.padding = "10px 20px";
-        div.style.background = "#333";
-        div.style.color = "#fff";
-        div.style.borderRadius = "5px";
+        notificationQueue.push(message);
+        if (!isWaitingToPost) {
+            processEntry();
+        }
+    }
 
-        document.body.appendChild(div);
+    function processEntry() {
+        if (notificationQueue.length === 0) {
+            isWaitingToPost = false;
+            return;
+        }
 
+        isWaitingToPost = true;
+        const message = notificationQueue.shift();
+        createNotification(message);
+
+        // Wait 1 second before allowing the next one to appear
         setTimeout(() => {
-            div.remove();
+            processEntry();
+        }, 1000);
+    }
+
+    function createNotification(text) {
+        const container = document.getElementById('notification-container');
+        const toast = document.createElement('div');
+        toast.className = 'notification';
+        toast.innerText = text;
+
+        container.appendChild(toast);
+
+        // Each notification lives for exactly 3 seconds
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 500); // Remove after fade animation
         }, 3000);
     }
 
+    clearBoard();
 </script>
 
 </html>
