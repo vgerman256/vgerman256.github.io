@@ -1,3 +1,4 @@
+
 :root {
     --primary-bg: powderblue;
 }
@@ -22,7 +23,10 @@ p {
 }
 
 .scroll-list {
-    max-height: 580px;
+    position: fixed;
+    top: 80%;
+    left: 75%;
+    max-height: 100px;
     overflow-y: auto;
     overflow-x: hidden;
     border: 0px solid #ccc;
@@ -76,4 +80,33 @@ dialog {
 .fade-out {
     opacity: 0;
     transform: scale(0.9);
+}
+
+
+.game-area {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+   
+    width: calc(80vmin + 40px);
+    height: calc(80vmin + 40px);
+   
+    margin: auto;
+}
+
+#canvas-chess {
+    position: absolute;
+    width: 80vmin;
+    height: 80vmin;
+    border: 1px solid black;
+    z-index: 2;
+    /* Sits on top */
+}
+
+#canvas-border {
+    border: 1px solid #ffffff;
+    position: absolute;
+    z-index: 1;
+    /* Sits behind */
 }
