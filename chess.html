@@ -14,6 +14,7 @@
     <header>
         <h2 align="center">Can defeat a chess robot?</h2>
     </header>
+    <div id="notification-container"></div>
     <br>
     <p align="center">
     <div style="display: flex;">
@@ -48,8 +49,6 @@
             <button value="cancel">Cancel</button>
         </form>
     </dialog>
-
-    <div id="notification-container"></div>
 
     <a style="margin-left: 20px;" href="index.html">Home</a>
 </body>
@@ -225,14 +224,6 @@
             }).join('');
     }
 
-    function clearChess() {
-        const canvas = document.getElementById("chessCanvas");
-        const ctx = canvas.getContext("2d");
-
-        ctx.fillStyle = 'white'; //"#f4f7fb";
-        ctx.fillRect(0, 0, 600, 600);
-    }
-
     async function initStockfishWeb() {
         await stockfishWeb.init();
 
@@ -245,34 +236,38 @@
         const ctx = canvas.getContext("2d");
 
         console.log("Font: " + ctx.font)
-        ctx.font = "12px sans-serif"
+        ctx.font = "14px sans-serif"
 
         // white letters (top) - rotated 180 degrees
         ctx.fillStyle = blackBoxColor;
         const leters1 = leters.toUpperCase();
-        ctx.save();
+
         for (let i = 0; i < 8; i++) {
             ctx.save();
-            ctx.translate(i * 75 + 55, 5);
+            ctx.translate(i * boxWidth() + 55, 5);
             ctx.rotate(Math.PI); // 180 degrees
             ctx.fillText(leters1[i], 0, 0);
             ctx.restore();
         }
-        ctx.restore();
+
 
         // white letters (bottom) - normal orientation
         for (let i = 0; i < 8; i++) {
-            ctx.fillText(leters1[i], i * 75 + 55, 635);
+            ctx.fillText(leters1[i], i * boxWidth() + 55, chessHeight() + 35);
         }
 
         // white numbers (left side)
         for (let i = 0; i < 8; i++) {
-            ctx.fillText(8 - i, 10, i * 75 + 64);
+            ctx.fillText(8 - i, 5, i * boxHeight() + 64);
         }
 
         // white numbers (right side)
         for (let i = 0; i < 8; i++) {
-            ctx.fillText(8 - i, 625, i * 75 + 64);
+            ctx.save();
+            ctx.translate(chessWidth() + 33, i * boxHeight() + 64);
+            ctx.rotate(Math.PI); // 180 degrees
+            ctx.fillText(8 - i, 0, 0);
+            ctx.restore();
         }
     }
 
@@ -286,16 +281,16 @@
         return [parseInt(leters.indexOf(a1[0])), 8 - parseInt(a1[1])]
     }
 
-    function handleSelect(ctx, xC, yC) {
+    function handleSelect(xC, yC) {
         // deselect old
         if (selectedSquare[0] == -1) {
             let c = colorFromPos(selectedSquare[0], selectedSquare[1]);
-            drawSelected(ctx, selectedSquare[0], selectedSquare[1], c);
+            drawSelected(selectedSquare[0], selectedSquare[1], c);
         }
 
         selectedSquare[0] = xC;
         selectedSquare[1] = yC;
-        drawSelected(ctx, xC, yC)
+        drawSelected(xC, yC)
 
         let p = getStateBoard(selectedSquare[0], selectedSquare[1]);
         if (p) {
@@ -309,7 +304,7 @@
 
             selectedPiece = p;
             possibleMovesVerbose = pMovesV;
-            addPossibleMovesBlueDots(ctx);
+            addPossibleMovesBlueDots();
         } else {
             possibleMovesVerbose = []
         }
@@ -335,17 +330,36 @@
         return text;
     }
 
+    const chessCanvas = document.getElementById('chessCanvas');
+
+    function boxWidth() {
+        return chessCanvas.width / 8;
+    }
+
+    function boxHeight() {
+        return chessCanvas.height / 8
+    }
+
+    function chessWidth() {
+        return chessCanvas.width;
+    }
+
+    function chessHeight() {
+        return chessCanvas.height;
+    }
+
+    chessCanvas.addEventListener('click', handleCanvasClick);
+
     function handleCanvasClick(event) {
-        const canvas = document.getElementById('chessCanvas');
-        const rect = canvas.getBoundingClientRect();
-        const ctx = canvas.getContext("2d");
+        const rect = chessCanvas.getBoundingClientRect();
 
         // Calculate coordinates relative to the canvas
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
+
         console.log("Event: x = " + x + " y = " + y);
-        var xC = Math.trunc(x / 75);
-        var yC = Math.trunc(y / 75);
+        var xC = Math.trunc(x / boxWidth());
+        var yC = Math.trunc(y / boxHeight());
         console.log("Event: xC = " + xC + " yC = " + yC);
 
         const newSelected = [xC, yC]
@@ -353,11 +367,11 @@
         // not yet selected
         if (selectedSquare[0] == -1) {
             console.log("Event: Select");
-            handleSelect(ctx, xC, yC);
+            handleSelect(xC, yC);
         } else if (!compareArrays(selectedSquare, newSelected)) {
             // deselect old
             let [xWas, yWas] = selectedSquare;
-            drawSelected(ctx, xWas, yWas, colorFromPos(xWas, yWas));
+            drawSelected(xWas, yWas, colorFromPos(xWas, yWas));
             let p = getStateBoard(xWas, yWas)
 
             let cTo = toChessNotation(xC, yC);
@@ -367,38 +381,38 @@
                     let moveResult = window.chessGame.move(allowedUserMove);
                     console.log("Move: " + objToString(moveResult));
 
-                    updateStateBoard(ctx, window.chessGame.board(), moveResult);
+                    updateStateBoard(window.chessGame.board(), moveResult);
                     updateMoveHistory();
                     let canMove = handleGameState(moveResult);
                     if (canMove) {
                         getComputerMoveAsync(moveResult).then(computerMove => {
                             let computerMoveResult = window.chessGame.move(computerMove);
-                            updateStateBoard(ctx, window.chessGame.board(), computerMoveResult);
-                            updateMovedSelection(ctx)
+                            updateStateBoard(window.chessGame.board(), computerMoveResult);
+                            updateMovedSelection()
                             updateMoveHistory()
                             handleGameState(computerMoveResult);
                         });
                     }
                 } catch (error) {
                     console.log(`Bad move: ${simpleMove}`)
-                    removePossibleMovesBlueDots(ctx);
+                    removePossibleMovesBlueDots();
                     return;
                 }
 
                 // clear blue dots
-                removePossibleMovesBlueDots(ctx);
+                removePossibleMovesBlueDots();
 
                 selectedSquare = [-1, -1];
                 console.log("Event: Move Piece: " + p);
             } else {
-                removePossibleMovesBlueDots(ctx);
-                handleSelect(ctx, xC, yC);
+                removePossibleMovesBlueDots();
+                handleSelect(xC, yC);
                 console.log("Event: Select 1");
             }
         } else {
-            removePossibleMovesBlueDots(ctx);
+            removePossibleMovesBlueDots();
             let c = colorFromPos(selectedSquare[0], selectedSquare[1]);
-            drawSelected(ctx, selectedSquare[0], selectedSquare[1], c);
+            drawSelected(selectedSquare[0], selectedSquare[1], c);
 
             selectedSquare = [-1, -1];
             console.log("Event: Deselect");
@@ -444,10 +458,9 @@
     }
 
     function undoMove() {
-        const canvas = document.getElementById('chessCanvas');
-        const ctx = canvas.getContext("2d");
+
         console.log("Undo last move: next turns " + window.chessGame.turn())
-        updateMovedSelection(ctx, true)
+        updateMovedSelection(true)
 
         for (var i = 0; i < 2; ++i) {
             let move1 = window.chessGame.undo();
@@ -457,9 +470,9 @@
             }
 
             console.log(`Undone move: ${objToString(move1)}`)
-            updateStateBoard(ctx, window.chessGame.board(), move1)
+            updateStateBoard(window.chessGame.board(), move1)
         }
-
+        updateMoveHistory();
         console.log("Next turns: " + window.chessGame.turn())
     }
 
@@ -467,73 +480,74 @@
         return JSON.stringify(a) === JSON.stringify(b);
     }
 
-    function updateStateBoard(ctx, newBoardJs, move) {
+    function updateStateBoard(newBoardJs, move) {
         stateBoardJs = newBoardJs;
 
         let [fx, fy] = fromChessNotation(move.from)
         let [tx, ty] = fromChessNotation(move.to)
 
-        updateStateAt(ctx, fx, fy);
+        updateStateAt(fx, fy);
 
         let lineUpdate = move.isKingsideCastle() || move.isQueensideCastle()
         if (!lineUpdate) {
-            updateStateAt(ctx, tx, ty);
+            updateStateAt(tx, ty);
         } else {
             for (var x = 0; x < 8; x++) {
-                updateStateAt(ctx, x, ty);
+                updateStateAt(x, ty);
             }
         }
         if (move.isEnPassant()) {
-            updateStateAt(ctx, tx, fy);
+            updateStateAt(tx, fy);
         }
     }
 
-    function updateMovedSelection(ctx, isforUndo = false) {
+    function updateMovedSelection(isforUndo = false) {
         let history = window.chessGame.history({ verbose: true })
         var last3 = history.slice(-3);
 
         if (isforUndo && last3.length == 3)
             last3.reverse();
         else if (isforUndo && last3.length != 3) {
-            drawSelectedMove(ctx, last3.pop())
+            drawSelectedMove(last3.pop())
             return;
         }
 
         if (last3.length == 3) {
-            drawSelectedMove(ctx, last3[0]);
+            drawSelectedMove(last3[0]);
         }
 
-        drawSelectedMove(ctx, last3.pop(), computerLastMoveColor)
+        drawSelectedMove(last3.pop(), computerLastMoveColor)
     }
 
-    function addPossibleMovesBlueDots(ctx) {
+    function addPossibleMovesBlueDots() {
         possibleMovesVerbose.forEach(move => {
             let [x, y] = fromChessNotation(move.to);
-            drawBlueDot(ctx, posToC(x) + 32, posToC(y) + 32)
+            drawBlueDot(posToC(x) + boxWidth() / 2, posToC(y) + boxHeight() / 2)
         });
     }
 
-    function removePossibleMovesBlueDots(ctx) {
+    function removePossibleMovesBlueDots() {
         possibleMovesVerbose.forEach(move => {
             let [x, y] = fromChessNotation(move.to);
-            updateStateAt(ctx, x, y);
+            updateStateAt(x, y);
         });
 
         possibleMovesVerbose = []
         selectedPiece = ''
     }
 
-    function drawSelected(ctx, xC, yC, color = blueDotColor) { // '#4A90D9'
+    function drawSelected(xC, yC, color = blueDotColor) { // '#4A90D9'
+        const ctx = chessCanvas.getContext("2d");
         console.log("Event: " + color);
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
-        ctx.strokeRect(posToC(xC), posToC(yC), 75, 75);
+        ctx.strokeRect(posToC(xC), posToC(yC), boxWidth(), boxHeight());
     }
 
-    function drawSelectedMove(ctx, move, color) {
+    function drawSelectedMove(move, color) {
         [fromChessNotation(move.from), fromChessNotation(move.to)]
             .forEach(([x, y]) =>
-                drawSelected(ctx, x, y, color ? color : colorFromPos(x, y)));
+                drawSelected(x, y, color ? color : colorFromPos(x, y)));
     }
 
     function colorFromPos(xC, yC) {
@@ -545,10 +559,10 @@
         return blackBoxColor;
     }
 
-    function fillBoard(ctx) {
+    function fillBoard() {
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
-                updateStateAt(ctx, j, i)
+                updateStateAt(j, i)
             }
         }
     }
@@ -563,28 +577,23 @@
         return p.type;
     }
 
-    function updateStateAt(ctx, x, y) {
+    function updateStateAt(x, y) {
+        const ctx = chessCanvas.getContext("2d");
         let piece = getStateBoard(x, y);
         let color = colorFromPos(x, y);
         ctx.fillStyle = color;
-        ctx.fillRect(posToC(x), posToC(y), 75, 75);
+        ctx.fillRect(posToC(x), posToC(y), boxWidth(), boxHeight());
 
-        drawPiece(ctx, 32 + posToC(x), 32 + posToC(y), piece)
+        drawPiece(ctx, boxWidth() / 2 + posToC(x), boxHeight() / 2 + posToC(y), piece)
     }
 
-    const chessMaincanvas = document.getElementById("chessCanvas");
-    chessMaincanvas.addEventListener('click', handleCanvasClick);
-
     function drawChess() {
-        const ctx = chessMaincanvas.getContext("2d");
-        fillBoard(ctx);
-
-        drawCoordinates()
-        console.log('Can move:', window.chessGame.moves());
+        fillBoard();
+        drawCoordinates();
     }
 
     function posToC(x) {
-        return 75 * x;
+        return boxWidth() * x;
     }
 
     function isWhitePiece(piece) {
@@ -595,7 +604,8 @@
     function drawPiece(ctx, x, y, piece) {
         // R Q - black rook and black queen
         // r k - white rook and white king
-        ctx.font = '50px serif';
+        let fontsize = Math.trunc(2 * boxWidth() / 3)
+        ctx.font = `${fontsize}px serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
@@ -616,7 +626,9 @@
         ctx.fillText(symbol, x, y);
     }
 
-    function drawBlueDot(ctx, x, y, color = blueDotColor) { // '#4A90D9' AI suggest
+    function drawBlueDot(x, y, color = blueDotColor) { // '#4A90D9' AI suggest
+        //const chessCanvas = document.getElementById('chessCanvas');
+        const ctx = chessCanvas.getContext("2d");
         ctx.fillStyle = color == '' ? blueDotColor : color;
         ctx.lineWidth = 5;
         ctx.beginPath();
@@ -629,7 +641,6 @@
         return a.length === b.length &&
             a.every((element, index) => element === b[index]);
     }
-
 
     let notificationQueue = [];
     let isWaitingToPost = false;
