@@ -16,6 +16,8 @@
     </header>
     <div id="notification-container"></div>
     <br>
+
+    <label id="blackCaptured"></label>
     <p align="center">
     <div style="display: flex;">
         <div style="position: relative; display: inline-block;">
@@ -30,6 +32,9 @@
         </div>
     </div>
     </p>
+
+    <label id="whiteCaptured"></label>
+
     <div class="button-container" style="margin-left: 20px;">
         <p>Game complexity:
             <input type="number" id="difficultyInput" min="0" max="20" value="1"> of 20.
@@ -49,6 +54,19 @@
             <button value="cancel">Cancel</button>
         </form>
     </dialog>
+
+    <!-- ToDo: Promotion Modal -->
+    <div id="promotion-modal"
+        style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+        <div
+            style="background:white; margin:15% auto; padding:20px; width:200px; text-align:center; border-radius:8px;">
+            <h3>Promote to:</h3>
+            <button onclick="selectPromotion('q')">Queen</button>
+            <button onclick="selectPromotion('r')">Rook</button>
+            <button onclick="selectPromotion('b')">Bishop</button>
+            <button onclick="selectPromotion('n')">Knight</button>
+        </div>
+    </div>
 
     <a style="margin-left: 20px;" href="index.html">Home</a>
 </body>
@@ -112,6 +130,8 @@
     const surrenderButton = document.getElementById('surrenderButton');
     const surrenderDialog = document.getElementById('surrenderDialog');
     const undoButton = document.getElementById('undoButton');
+    const blackCaptured = document.getElementById('blackCaptured');
+    const whiteCaptured = document.getElementById('whiteCaptured');
 
     newGameButton.addEventListener('click', () => {
         const level = difficultyInput.value;
@@ -177,7 +197,7 @@
         stateBoardJs = [...board]
 
         initStockfishWeb();
-
+        blackCaptured.innerText = whiteCaptured.innerText = '';
         showNotification("New game started, white moves first!");
     }
 
@@ -204,24 +224,39 @@
         addGameResult(msg)
     }
 
-    function updateMoveHistory() {
-        let history = window.chessGame.history({ verbose: true })
-        htmlMovesHistory.innerHTML = history.toReversed()
-            .map(move => {
-                let p = move.color == 'b'
-                    ? move.piece.toUpperCase()
-                    : move.piece;
+    function updateMoveHistory(groupByTwo = true) {
+        blackCaptured.innerText = whiteCaptured.innerText = ''
+        let history = window.chessGame.history({ verbose: true });
 
-                let line = `${pieceToUtf8Image.get(p)} ${move.from} - ${move.to}`;
-                if (move.isCapture()) {
-                    let cp = move.color != 'b'
-                        ? move.captured.toUpperCase()
-                        : move.captured;
+        // 1. Generate the individual move strings first
+        let moveStrings = history.toReversed().map(move => {
+            let p = move.color == 'b' ? move.piece.toUpperCase() : move.piece;
+            let line = `${pieceToUtf8Image.get(p)} ${move.from} - ${move.to}`;
 
-                    line += ` ${pieceToUtf8Image.get(cp)}`
+            if (move.isCapture()) {
+                let cp = move.color != 'b' ? move.captured.toUpperCase() : move.captured;
+                let pieceSymbol = ` ${pieceToUtf8Image.get(cp)}`;
+                line += pieceSymbol;
+
+                if (move.color == 'b') {
+                    blackCaptured.innerText += pieceSymbol;
+                } else {
+                    whiteCaptured.innerText += pieceSymbol;
                 }
-                return `<li>${line}</li>`;
-            }).join('');
+            }
+            return line;
+        });
+
+        let groupedHistory = groupByTwo ? [] : moveStrings.map(h => `<li>${h}</li>`);
+        if (groupByTwo) {
+            for (let i = 0; i < moveStrings.length; i += 2) {
+                // Join the current move and the next one if it exists
+                let pair = moveStrings.slice(i, i + 2).reverse().join(' ');
+                groupedHistory.push(`<li>${pair}</li>`);
+            }
+        }
+
+        htmlMovesHistory.innerHTML = groupedHistory.join('');
     }
 
     async function initStockfishWeb() {
@@ -349,8 +384,34 @@
         return chessCanvas.height;
     }
 
-    chessCanvas.addEventListener('click', handleCanvasClick);
+    let pendingMove = null;
+    function handlePromotion(move) {
+        /*
+        // ToDo: make user seletction!
+        pendingMove = move;
+        document.getElementById('promotion-modal').style.display = 'block';
+        */
+        move.promotion = 'q'
+        return;
+    }
 
+    // ToDo: make user seletction!
+    function selectPromotion(pieceType) {
+        if (pendingMove) {
+            game.move({
+                from: pendingMove.from,
+                to: pendingMove.to,
+                promotion: pieceType // 'q', 'r', 'b', or 'n'
+            });
+
+            // Hide modal and refresh UI
+            document.getElementById('promotion-modal').style.display = 'none';
+            pendingMove = null;
+            updateBoard(); // Your function to redraw the board
+        }
+    }
+
+    chessCanvas.addEventListener('click', handleCanvasClick);
     function handleCanvasClick(event) {
         const rect = chessCanvas.getBoundingClientRect();
 
@@ -379,11 +440,16 @@
             let allowedUserMove = possibleMovesVerbose.find(v => v.to == cTo)
             if (p && allowedUserMove) {
                 try {
+
+                    if (allowedUserMove.isPromotion()) {
+                        handlePromotion(allowedUserMove);
+                    }
+
                     let moveResult = window.chessGame.move(allowedUserMove);
                     console.log("Move: " + objToString(moveResult));
 
                     updateStateBoard(window.chessGame.board(), moveResult);
-                    updateMoveHistory();
+
                     let canMove = handleGameState(moveResult);
                     if (canMove) {
                         getComputerMoveAsync(moveResult).then(computerMove => {
@@ -393,6 +459,8 @@
                             updateMoveHistory()
                             handleGameState(computerMoveResult);
                         });
+                    } else {
+                        updateMoveHistory();
                     }
                 } catch (error) {
                     console.log(`Bad move: ${simpleMove}`)

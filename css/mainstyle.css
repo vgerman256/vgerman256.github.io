@@ -26,6 +26,21 @@ p {
     overflow-y: auto;
     overflow-x: hidden;
     border: 0px solid #ccc;
+    font-family: verdana;
+}
+
+#whiteCaptured {
+    font-size: larger;
+    align-items: left;
+    font-family: verdana;
+}
+
+#blackCaptured {
+    font-size: larger;
+    display: inline-block;
+    transform: rotate(180deg);
+    align-items: left;
+    font-family: verdana;
 }
 
 dialog {
