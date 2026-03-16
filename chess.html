@@ -186,11 +186,6 @@
     }
 
     async function getComputerMoveAsync(move) {
-        if (!isWithRobotPlay()) {
-            console.log("2 palyers play");
-            return;
-        }
-
         let fenPos = move.after;
         return await stockfishWeb.getBestMoveFen(fenPos);
     }
@@ -448,9 +443,9 @@
                 updateMovedSelection()
                 updateMoveHistory()
                 handleGameState(computerMoveResult);
-            } else {
-                updateMoveHistory();
             }
+
+            updateMoveHistory();
             removePossibleMovesBlueDots();
         } catch (error) {
             console.log(`Bad move: ${allowedUserMove.p} ${allowedUserMove.to}`);
