@@ -43,6 +43,9 @@
         <button type="button" id="newGameButton">Start new game</button>
         <button disabled type="button" id="undoButton" onclick='undoMove()'>Undo</button>
         <button disabled type="button" id="surrenderButton">Surrender</button>
+
+        <input type="checkbox" id="gameType" name="gameType" value="withRobot" checked>
+        <label for="withRobot">Play with robot</label><br>
     </div>
 
     <br>
@@ -55,11 +58,10 @@
         </form>
     </dialog>
 
-    <!-- ToDo: Promotion Modal -->
     <div id="promotion-modal"
         style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
         <div
-            style="background:white; margin:15% auto; padding:20px; width:200px; text-align:center; border-radius:8px;">
+            style="background:powderblue; margin:15% auto; padding:20px; width:200px; text-align:center; border-radius:8px;">
             <h3>Promote to:</h3>
             <button onclick="selectPromotion('q')">Queen</button>
             <button onclick="selectPromotion('r')">Rook</button>
@@ -144,6 +146,10 @@
         updateButtonsState();
     });
 
+    function isWithRobotPlay() {
+        return document.getElementById("gameType").checked;
+    }
+
     function defaultButtonState() {
         let isGgameInProgress = false;
         difficultyInput.disabled = isGgameInProgress;
@@ -180,6 +186,11 @@
     }
 
     async function getComputerMoveAsync(move) {
+        if (!isWithRobotPlay()) {
+            console.log("2 palyers play");
+            return;
+        }
+
         let fenPos = move.after;
         return await stockfishWeb.getBestMoveFen(fenPos);
     }
@@ -326,9 +337,18 @@
 
         selectedSquare[0] = xC;
         selectedSquare[1] = yC;
+        let p = getStateBoard(selectedSquare[0], selectedSquare[1]);
+
+        // Unable to select not moving color
+        if (p && isWhitePiece(p) && window.chessGame.turn() !== 'w' ||
+            p && !isWhitePiece(p) && window.chessGame.turn() !== 'b') {
+            possibleMovesVerbose = [];
+            selectedSquare = [-1, -1];
+            return;
+        }
+
         drawSelected(xC, yC)
 
-        let p = getStateBoard(selectedSquare[0], selectedSquare[1]);
         if (p) {
             let pos = toChessNotation(selectedSquare[0], selectedSquare[1])
             console.log("Event: Slected " + p + ' at ' + pos);
@@ -385,29 +405,57 @@
     }
 
     let pendingMove = null;
-    function handlePromotion(move) {
-        /*
-        // ToDo: make user seletction!
-        pendingMove = move;
+    function handlePromotion(move, allowedMoves) {
+        pendingMove = {
+            move: move,
+            allowedMoves: [...possibleMovesVerbose]
+        };
+
         document.getElementById('promotion-modal').style.display = 'block';
-        */
-        move.promotion = 'q'
         return;
     }
 
-    // ToDo: make user seletction!
     function selectPromotion(pieceType) {
         if (pendingMove) {
-            game.move({
-                from: pendingMove.from,
-                to: pendingMove.to,
-                promotion: pieceType // 'q', 'r', 'b', or 'n'
-            });
 
             // Hide modal and refresh UI
             document.getElementById('promotion-modal').style.display = 'none';
+
+            let refinedMove = pendingMove.allowedMoves.find(x => x.to == pendingMove.move.to && x.promotion == pieceType);
+            //let move = pendingMove.move;
             pendingMove = null;
-            updateBoard(); // Your function to redraw the board
+            doMove(refinedMove, true)
+        }
+    }
+
+    async function doMove(allowedUserMove, promotionHandled = false) {
+        try {
+            if (allowedUserMove.isPromotion() && !promotionHandled) {
+                handlePromotion(allowedUserMove, possibleMovesVerbose);
+                return
+            }
+
+            let moveResult = window.chessGame.move(allowedUserMove);
+            console.log("Move: " + objToString(moveResult));
+
+            updateStateBoard(window.chessGame.board(), moveResult);
+
+            let canMove = handleGameState(moveResult);
+            if (canMove && isWithRobotPlay()) {
+                computerMove = await getComputerMoveAsync(moveResult);
+                let computerMoveResult = window.chessGame.move(computerMove);
+                updateStateBoard(window.chessGame.board(), computerMoveResult);
+                updateMovedSelection()
+                updateMoveHistory()
+                handleGameState(computerMoveResult);
+            } else {
+                updateMoveHistory();
+            }
+            removePossibleMovesBlueDots();
+        } catch (error) {
+            console.log(`Bad move: ${allowedUserMove.p} ${allowedUserMove.to}`);
+            removePossibleMovesBlueDots();
+            return;
         }
     }
 
@@ -437,42 +485,15 @@
             let p = getStateBoard(xWas, yWas)
 
             let cTo = toChessNotation(xC, yC);
-            let allowedUserMove = possibleMovesVerbose.find(v => v.to == cTo)
+            let allowedUserMove = possibleMovesVerbose.find(v => v.to == cTo);
+            // clear blue dots
+
             if (p && allowedUserMove) {
-                try {
-
-                    if (allowedUserMove.isPromotion()) {
-                        handlePromotion(allowedUserMove);
-                    }
-
-                    let moveResult = window.chessGame.move(allowedUserMove);
-                    console.log("Move: " + objToString(moveResult));
-
-                    updateStateBoard(window.chessGame.board(), moveResult);
-
-                    let canMove = handleGameState(moveResult);
-                    if (canMove) {
-                        getComputerMoveAsync(moveResult).then(computerMove => {
-                            let computerMoveResult = window.chessGame.move(computerMove);
-                            updateStateBoard(window.chessGame.board(), computerMoveResult);
-                            updateMovedSelection()
-                            updateMoveHistory()
-                            handleGameState(computerMoveResult);
-                        });
-                    } else {
-                        updateMoveHistory();
-                    }
-                } catch (error) {
-                    console.log(`Bad move: ${simpleMove}`)
-                    removePossibleMovesBlueDots();
-                    return;
-                }
-
-                // clear blue dots
-                removePossibleMovesBlueDots();
-
                 selectedSquare = [-1, -1];
-                console.log("Event: Move Piece: " + p);
+
+                doMove(allowedUserMove).then(() => {
+                    console.log("Event: Move Piece: " + p);
+                });
             } else {
                 removePossibleMovesBlueDots();
                 handleSelect(xC, yC);
