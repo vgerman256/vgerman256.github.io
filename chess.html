@@ -417,7 +417,6 @@
             document.getElementById('promotion-modal').style.display = 'none';
 
             let refinedMove = pendingMove.allowedMoves.find(x => x.to == pendingMove.move.to && x.promotion == pieceType);
-            //let move = pendingMove.move;
             pendingMove = null;
             doMove(refinedMove, true)
         }
@@ -434,8 +433,11 @@
             console.log("Move: " + objToString(moveResult));
 
             updateStateBoard(window.chessGame.board(), moveResult);
+            removePossibleMovesBlueDots();
 
+            updateMoveHistory()
             let canMove = handleGameState(moveResult);
+
             if (canMove && isWithRobotPlay()) {
                 computerMove = await getComputerMoveAsync(moveResult);
                 let computerMoveResult = window.chessGame.move(computerMove);
@@ -444,9 +446,6 @@
                 updateMoveHistory()
                 handleGameState(computerMoveResult);
             }
-
-            updateMoveHistory();
-            removePossibleMovesBlueDots();
         } catch (error) {
             console.log(`Bad move: ${allowedUserMove.p} ${allowedUserMove.to}`);
             removePossibleMovesBlueDots();
