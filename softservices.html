@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IT Consulting & Software Solutions | Szczecin</title>
     <script src="https://tailwindcss.com"></script>
     <style>
-        .lang-content { display: none; }
-        .active-lang { display: block; }
+        .lang-content {
+            display: none;
+        }
+
+        .active-lang {
+            display: block;
+        }
     </style>
 </head>
+
 <body class="bg-gray-50 text-gray-800 font-sans">
 
     <!-- Header & Language Switcher -->
@@ -17,8 +24,10 @@
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="text-2xl font-bold text-blue-600">SoftServices</div>
             <div class="flex items-center space-x-2">
-                <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1 rounded border hover:bg-gray-100 transition">EN</button>
-                <button onclick="setLanguage('pl')" id="btn-pl" class="px-3 py-1 rounded border hover:bg-gray-100 transition">PL</button>
+                <button onclick="setLanguage('en')" id="btn-en"
+                    class="px-3 py-1 rounded border hover:bg-gray-100 transition">EN</button>
+                <button onclick="setLanguage('pl')" id="btn-pl"
+                    class="px-3 py-1 rounded border hover:bg-gray-100 transition">PL</button>
             </div>
         </div>
     </header>
@@ -28,13 +37,16 @@
         <div class="container mx-auto px-6 text-center">
             <div class="lang-content en">
                 <h1 class="text-4xl md:text-5xl font-extrabold mb-4">20+ Years of IT Expertise at Your Service</h1>
-                <p class="text-xl mb-8">From fixing a report typo to building global mobile apps. Your personal IT partner in Szczecin and Online.</p>
+                <p class="text-xl mb-8">From fixing a report typo to building global mobile apps. Your personal IT
+                    partner in Szczecin and Online.</p>
             </div>
             <div class="lang-content pl">
                 <h1 class="text-4xl md:text-5xl font-extrabold mb-4">20+ lat doświadczenia w IT do Twoich usług</h1>
-                <p class="text-xl mb-8">Od poprawienia przecinka w raporcie po budowę aplikacji mobilnych. Twój osobisty partner IT w Szczecinie i Online.</p>
+                <p class="text-xl mb-8">Od poprawienia przecinka w raporcie po budowę aplikacji mobilnych. Twój osobisty
+                    partner IT w Szczecinie i Online.</p>
             </div>
-            <a href="#contact" class="bg-white text-blue-600 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg">
+            <a href="#contact"
+                class="bg-white text-blue-600 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg">
                 <span class="lang-content en">Book Free Consultation</span>
                 <span class="lang-content pl">Zamów bezpłatną konsultację</span>
             </a>
@@ -48,22 +60,26 @@
             <div class="bg-white p-8 rounded-xl shadow-md border-t-4 border-blue-500">
                 <div class="lang-content en">
                     <h3 class="text-xl font-bold mb-3">Quick Support</h3>
-                    <p>Fixing formatting, reports, bugs, or helping you understand how to use your software. No task is too small.</p>
+                    <p>Fixing formatting, reports, bugs, or helping you understand how to use your software. No task is
+                        too small.</p>
                 </div>
                 <div class="lang-content pl">
                     <h3 class="text-xl font-bold mb-3">Szybka Pomoc</h3>
-                    <p>Poprawa formatowania, raportów, błędów lub pomoc w obsłudze oprogramowania. Żadne zadanie nie jest za małe.</p>
+                    <p>Poprawa formatowania, raportów, błędów lub pomoc w obsłudze oprogramowania. Żadne zadanie nie
+                        jest za małe.</p>
                 </div>
             </div>
             <!-- Service 2 -->
             <div class="bg-white p-8 rounded-xl shadow-md border-t-4 border-blue-500">
                 <div class="lang-content en">
                     <h3 class="text-xl font-bold mb-3">Custom Development</h3>
-                    <p>Web portals, mobile apps, Telegram bots, and automation of business processes tailored to your strategy.</p>
+                    <p>Web portals, mobile apps, Telegram bots, and automation of business processes tailored to your
+                        strategy.</p>
                 </div>
                 <div class="lang-content pl">
                     <h3 class="text-xl font-bold mb-3">Rozwiązania Dedykowane</h3>
-                    <p>Portale internetowe, aplikacje mobilne, boty Telegram i automatyzacja procesów biznesowych pod Twoją strategię.</p>
+                    <p>Portale internetowe, aplikacje mobilne, boty Telegram i automatyzacja procesów biznesowych pod
+                        Twoją strategię.</p>
                 </div>
             </div>
             <!-- Service 3 -->
@@ -74,7 +90,8 @@
                 </div>
                 <div class="lang-content pl">
                     <h3 class="text-xl font-bold mb-3">Infrastruktura IT</h3>
-                    <p>Wdrożenia w chmurze, konfiguracja sprzętu oraz dedykowani specjaliści pracujący bezpośrednio w Twoim biurze.</p>
+                    <p>Wdrożenia w chmurze, konfiguracja sprzętu oraz dedykowani specjaliści pracujący bezpośrednio w
+                        Twoim biurze.</p>
                 </div>
             </div>
         </div>
@@ -93,11 +110,24 @@
                     <p class="text-gray-600">Porozmawiajmy o Twoim projekcie. Wystawiamy faktury B2B.</p>
                 </div>
 
-                <form action="#" class="space-y-4">
-                    <input type="text" placeholder="Name / Imię" class="w-full px-4 py-3 rounded border focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    <input type="email" placeholder="Email" class="w-full px-4 py-3 rounded border focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    <textarea placeholder="Message / Wiadomość" rows="4" class="w-full px-4 py-3 rounded border focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded hover:bg-blue-700 transition">
+                <form action="https://api.web3forms.com/submit" method="POST" class="space-y-4">
+                    <input type="hidden" name="access_key" value="41203b59-cb1b-45a6-a397-ab97378e6fde">
+
+                    <input type="text" name="name" placeholder="Name / Imię"
+                        class="w-full px-4 py-3 rounded border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                    <input type="email" name="email" placeholder="Email"
+                        class="w-full px-4 py-3 rounded border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                    <textarea name="message" placeholder="Message / Wiadomość" rows="4"
+                        class="w-full px-4 py-3 rounded border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required></textarea>
+
+                    <input type="hidden" name="subject" value="New Lead from SoftServices Site">
+                    <input type="checkbox" name="botcheck" class="hidden" style="display: none;">
+
+                    <button type="submit"
+                        class="w-full bg-blue-600 text-white font-bold py-4 rounded hover:bg-blue-700 transition">
                         <span class="lang-content en">Send Request</span>
                         <span class="lang-content pl">Wyślij zapytanie</span>
                     </button>
@@ -116,11 +146,11 @@
             document.querySelectorAll('.lang-content').forEach(el => el.classList.remove('active-lang'));
             // Show selected
             document.querySelectorAll('.' + lang).forEach(el => el.classList.add('active-lang'));
-            
+
             // UI Button highlight
             document.getElementById('btn-en').classList.toggle('bg-blue-100', lang === 'en');
             document.getElementById('btn-pl').classList.toggle('bg-blue-100', lang === 'pl');
-            
+
             localStorage.setItem('preferredLang', lang);
         }
 
@@ -130,4 +160,5 @@
         setLanguage(savedLang || browserLang);
     </script>
 </body>
+
 </html>
