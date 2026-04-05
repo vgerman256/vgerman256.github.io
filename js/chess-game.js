@@ -608,21 +608,31 @@ function drawPiece(ctx, x, y, piece) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    let symbol = '';
-
-    if (piece) {
-        symbol = pieceToUtf8Image.get(piece);
-
-        let color = isWhitePiece(piece) ? whiteColor : blackColor;
-        ctx.fillStyle = color;
-
-        // Add stroke for better visibility on both square colors
-        ctx.strokeStyle = isWhitePiece(piece) ? '#FFFFFF' : '#000000';
-        ctx.lineWidth = 1;
-        ctx.strokeText(symbol, x, y);
+    if (!piece) {
+        ctx.fillText('', x, y);
+        return;
     }
 
-    ctx.fillText(symbol, x, y);
+    const symbol = pieceToUtf8Image.get(piece);
+    const isWhite = isWhitePiece(piece);
+
+    ctx.fillStyle = isWhite ? whiteColor : blackColor;
+    ctx.strokeStyle = isWhite ? '#FFFFFF' : '#000000';
+    ctx.lineWidth = 1;
+
+    // In two-player mode, rotate black pieces 180° to face the opponent
+    const rotateForOpponent = !isWhite && !isWithRobotPlay();
+    if (rotateForOpponent) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.PI);
+        ctx.strokeText(symbol, 0, 0);
+        ctx.fillText(symbol, 0, 0);
+        ctx.restore();
+    } else {
+        ctx.strokeText(symbol, x, y);
+        ctx.fillText(symbol, x, y);
+    }
 }
 
 function drawBlueDot(x, y, color = blueDotColor) { // '#4A90D9' AI suggest
