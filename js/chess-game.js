@@ -49,6 +49,7 @@ const surrenderDialog = document.getElementById('surrenderDialog');
 const undoButton = document.getElementById('undoButton');
 const blackCaptured = document.getElementById('blackCaptured');
 const whiteCaptured = document.getElementById('whiteCaptured');
+const isWithRobotPlayCheckbox = document.getElementById("gameType")
 
 newGameButton.addEventListener('click', () => {
     const level = difficultyInput.value;
@@ -62,7 +63,7 @@ newGameButton.addEventListener('click', () => {
 });
 
 function isWithRobotPlay() {
-    return document.getElementById("gameType").checked;
+    return isWithRobotPlayCheckbox.checked;
 }
 
 function defaultButtonState() {
@@ -79,6 +80,7 @@ function updateButtonsState() {
     newGameButton.disabled = isGgameInProgress;
     surrenderButton.disabled = !isGgameInProgress;
     undoButton.disabled = !isGgameInProgress;
+    isWithRobotPlayCheckbox.disabled = isGgameInProgress;
 }
 
 surrenderButton.addEventListener('click', () => {
