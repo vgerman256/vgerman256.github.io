@@ -1,5 +1,9 @@
 import { Chess, Move } from './chess.js';
 
+if (!new URLSearchParams(location.search).has('debug')) {
+    console.log = () => { };
+}
+
 const game = new Chess();
 window.chessGame = game;
 
@@ -18,6 +22,8 @@ const whiteBoxColor = '#F5F5DC'
 
 const computerLastMoveColor = '#4A90D9'
 const blueDotColor = 'blue'
+
+const STORAGE_KEY = 'chess_game_state';
 
 let selectedSquare = [-1, -1];
 
@@ -96,8 +102,7 @@ surrenderDialog.addEventListener('close', () => {
 
 var wasmSupported = typeof WebAssembly === 'object' && WebAssembly.validate(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
 
-// ToDo: make it lazy!
-let stockfishWeb = new StockfishWeb(wasmSupported ? './js/stockfish.wasm.js' : './js/stockfish.js');
+let stockfishWeb = null;
 
 async function setEngineDifficulty(level) {
     await stockfishWeb.setEngineDifficulty(level)
@@ -115,7 +120,60 @@ function addGameResult(item) {
     htmlMovesHistory.prepend(li)
 }
 
+function saveGameState() {
+    const state = {
+        pgn: window.chessGame.pgn(),
+        difficulty: difficultyInput.value,
+        withRobot: isWithRobotPlay(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function clearGameState() {
+    localStorage.removeItem(STORAGE_KEY);
+}
+
+function loadSavedGame() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+
+        const state = JSON.parse(raw);
+        if (!state.pgn) return false;
+
+        initNewChessGame();
+        window.chessGame.loadPgn(state.pgn);
+
+        if (window.chessGame.isGameOver()) {
+            clearGameState();
+            return false;
+        }
+
+        stateBoardJs = window.chessGame.board();
+        difficultyInput.value = state.difficulty ?? 1;
+        document.getElementById('gameType').checked = state.withRobot !== false;
+
+        initStockfishWeb();
+        setEngineDifficulty(difficultyInput.value);
+
+        drawChess();
+        updateMoveHistory();
+        updateButtonsState();
+
+        if (window.chessGame.history().length > 0) {
+            updateMovedSelection();
+        }
+
+        showNotification('Game restored!');
+        return true;
+    } catch {
+        clearGameState();
+        return false;
+    }
+}
+
 function initNewGame() {
+    clearGameState();
     initNewChessGame();
     var board = window.chessGame.board();
     stateBoardJs = [...board]
@@ -141,6 +199,7 @@ function clearBoard() {
 }
 
 function surrenderGame() {
+    clearGameState();
     clearBoard()
     var loser = !isWhiteMove() ? "Black" : "White"
     var msg = `${loser} surrendered!`
@@ -186,6 +245,9 @@ function updateMoveHistory(groupByTwo = true) {
 }
 
 async function initStockfishWeb() {
+    if (!stockfishWeb) {
+        stockfishWeb = new StockfishWeb(wasmSupported ? './js/stockfish.wasm.js' : './js/stockfish.js');
+    }
     await stockfishWeb.init();
 
     const move = await stockfishWeb.getBestMove('e2e4', 1000);
@@ -245,7 +307,7 @@ function fromChessNotation(a1) {
 
 function handleSelect(xC, yC) {
     // deselect old
-    if (selectedSquare[0] == -1) {
+    if (selectedSquare[0] != -1) {
         let c = colorFromPos(selectedSquare[0], selectedSquare[1]);
         drawSelected(selectedSquare[0], selectedSquare[1], c);
     }
@@ -267,8 +329,6 @@ function handleSelect(xC, yC) {
     if (p) {
         let pos = toChessNotation(selectedSquare[0], selectedSquare[1])
         console.log("Event: Slected " + p + ' at ' + pos);
-        let pMoves = window.chessGame.moves({ square: pos, verbose: false })
-        console.log(`Possible Moves raw: ${pMoves}`)
 
         let pMovesV = window.chessGame.moves({ square: pos, verbose: true })
         console.log(`Possible Moves verbose: ${objToString(pMovesV)}`)
@@ -284,7 +344,6 @@ function handleSelect(xC, yC) {
 function objToString(obj) {
     if (Array.isArray(obj)) {
         let aText = '['
-        let first = true;
         obj.forEach(o => {
             aText += objToString(o) + ", ";
         });
@@ -366,6 +425,7 @@ async function doMove(allowedUserMove, promotionHandled = false) {
             updateMoveHistory()
             handleGameState(computerMoveResult);
         }
+        saveGameState();
     } catch (error) {
         console.log(`Bad move: ${allowedUserMove.p} ${allowedUserMove.to}`);
         removePossibleMovesBlueDots();
@@ -480,6 +540,7 @@ function undoMove() {
         updateStateBoard(window.chessGame.board(), move1)
     }
     updateMoveHistory();
+    saveGameState();
     console.log("Next turns: " + window.chessGame.turn())
 }
 
@@ -703,4 +764,6 @@ function createNotification(text) {
 window.undoMove = undoMove;
 window.selectPromotion = selectPromotion;
 
-clearBoard();
+if (!loadSavedGame()) {
+    clearBoard();
+}
