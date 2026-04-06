@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IT Consulting & Software Solutions | Szczecin</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<style>
+        .lang-content { display: none; }
+        .active-lang { display: block; }
+        span.active-lang { display: inline; }
+        .hero {
+            padding: 16px 0;
+            margin: 4px 0;
+        }
+        .hero h2 { margin-bottom: 8px; }
+        .hero p  { margin-bottom: 6px; }
+        .lang-btn-active { background-color: #dbeafe; }
+        body { margin-top: 0; padding-top: 0; }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+
+        <!-- Hero -->
+        <div class="hero">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                <div>
+                    <h2 class="lang-content en" style="margin:0;">End-to-End Software Solutions for Your Business</h2>
+                    <h2 class="lang-content pl" style="margin:0;">Kompleksowe Rozwiązania Softwarowe dla Twojego Biznesu</h2>
+                </div>
+                <div style="white-space:nowrap; margin-left:12px; flex-shrink:0;">
+                    <button id="btn-en" onclick="setLanguage('en')" class="btn btn-xs btn-default">EN</button>
+                    <button id="btn-pl" onclick="setLanguage('pl')" class="btn btn-xs btn-default">PL</button>
+                </div>
+            </div>
+            <div class="lang-content en">
+                <p>We design, build, and support software tailored to your needs — from quick fixes and automations to full-scale web and mobile applications.</p>
+                <p>Whether you are a startup, a growing mid-size company, or a large enterprise, we deliver reliable solutions on time and within budget. Available locally in Szczecin and remotely across Europe.</p>
+            </div>
+            <div class="lang-content pl">
+                <p>Projektujemy, budujemy i wspieramy oprogramowanie dopasowane do Twoich potrzeb — od szybkich poprawek i automatyzacji po rozbudowane aplikacje webowe i mobilne.</p>
+                <p>Niezależnie czy jesteś startupem, rozwijającą się firmą średniej wielkości czy dużym przedsiębiorstwem — dostarczamy niezawodne rozwiązania na czas i w ramach budżetu. Działamy lokalnie w Szczecinie i zdalnie w całej Europie.</p>
+            </div>
+            <p><em>
+                <span class="lang-content en">Free initial consultation available for new customers.</span>
+                <span class="lang-content pl">Bezpłatna konsultacja wstępna dostępna dla nowych klientów.</span>
+            </em></p>
+        </div>
+
+        <!-- Services -->
+        <div class="row" style="margin-bottom: 24px;">
+            <div class="col-md-4">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title lang-content en">Quick Support</h3>
+                        <h3 class="panel-title lang-content pl">Szybka Pomoc</h3>
+                    </div>
+                    <div class="panel-body">
+                        <span class="lang-content en">Fixing formatting, reports, bugs, or helping you understand how to use your software. No task is too small.</span>
+                        <span class="lang-content pl">Poprawa formatowania, raportów, błędów lub pomoc w obsłudze oprogramowania. Żadne zadanie nie jest za małe.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title lang-content en">Custom Development</h3>
+                        <h3 class="panel-title lang-content pl">Rozwiązania Dedykowane</h3>
+                    </div>
+                    <div class="panel-body">
+                        <span class="lang-content en">Web portals, mobile apps, Telegram bots, and automation of business processes tailored to your strategy.</span>
+                        <span class="lang-content pl">Portale internetowe, aplikacje mobilne, boty Telegram i automatyzacja procesów biznesowych pod Twoją strategię.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title lang-content en">IT Infrastructure</h3>
+                        <h3 class="panel-title lang-content pl">Infrastruktura IT</h3>
+                    </div>
+                    <div class="panel-body">
+                        <span class="lang-content en">Cloud deployment, hardware configuration, and dedicated on-site specialists in your office.</span>
+                        <span class="lang-content pl">Wdrożenia w chmurze, konfiguracja sprzętu oraz dedykowani specjaliści pracujący bezpośrednio w Twoim biurze.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div id="contact-ss" class="row" style="margin-bottom: 40px;">
+            <div class="col-md-8">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title lang-content en">Contact Us</h3>
+                        <h3 class="panel-title lang-content pl">Skontaktuj się</h3>
+                    </div>
+                    <div class="panel-body">
+                        <p class="text-muted">
+                            <span class="lang-content en">Let's discuss your project. B2B contracts available.</span>
+                            <span class="lang-content pl">Porozmawiajmy o Twoim projekcie. Wystawiamy faktury B2B.</span>
+                        </p>
+                        <div id="form-success" style="display:none;" class="alert alert-success">
+                            <span class="lang-content en">Thank you! We will be in touch soon.</span>
+                            <span class="lang-content pl">Dziękujemy! Odezwiemy się wkrótce.</span>
+                        </div>
+                        <form id="contact-form" action="https://api.web3forms.com/submit" method="POST">
+                            <input type="hidden" name="access_key" value="41203b59-cb1b-45a6-a397-ab97378e6fde">
+                            <input type="hidden" name="subject" value="New Lead from SoftServices Site">
+                            <input type="checkbox" name="botcheck" style="display:none;">
+                            <div class="form-group">
+                                <input type="text" name="name" placeholder="Name / Imię"
+                                    class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" name="email" placeholder="Email"
+                                    class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <textarea name="message" placeholder="Message / Wiadomość" rows="4"
+                                    class="form-control" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <span class="lang-content en">Send Request</span>
+                                <span class="lang-content pl">Wyślij zapytanie</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <div id="frame" style="width:100%; margin:auto; position:relative; z-index:99998;">
+            <iframe data-aa='2432701' src='//acceptable.a-ads.com/2432701/?size=Adaptive'
+                style='border:0; padding:0; width:70%; height:auto; overflow:hidden; display:block; margin:auto;'></iframe>
+        </div>
+    </footer>
+
+    <script>
+        function setLanguage(lang) {
+            document.querySelectorAll('.lang-content').forEach(el => el.classList.remove('active-lang'));
+            document.querySelectorAll('.' + lang).forEach(el => el.classList.add('active-lang'));
+            document.getElementById('btn-en').classList.toggle('lang-btn-active', lang === 'en');
+            document.getElementById('btn-pl').classList.toggle('lang-btn-active', lang === 'pl');
+            localStorage.setItem('preferredLang', lang);
+        }
+
+        const savedLang = localStorage.getItem('preferredLang');
+        const browserLang = navigator.language.startsWith('pl') ? 'pl' : 'en';
+        setLanguage(savedLang || browserLang);
+
+        document.getElementById('contact-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = new FormData(form);
+            try {
+                const response = await fetch(form.action, { method: 'POST', body: data });
+                if (response.ok) {
+                    form.reset();
+                    const success = document.getElementById('form-success');
+                    success.style.display = 'block';
+                    setTimeout(() => { success.style.display = 'none'; }, 5000);
+                }
+            } catch {
+                // network error — let the form fall through on retry
+            }
+        });
+    </script>
+
+</body>
+
+</html>
