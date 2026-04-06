@@ -72,6 +72,7 @@ function defaultButtonState() {
     newGameButton.disabled = isGgameInProgress;
     surrenderButton.disabled = !isGgameInProgress;
     undoButton.disabled = !isGgameInProgress;
+    isWithRobotPlayCheckbox.disabled = isGgameInProgress;
 }
 
 function updateButtonsState() {
@@ -141,8 +142,10 @@ function clearBoard() {
 
 function surrenderGame() {
     clearBoard()
-    var msg = "Black won, white surrendered"
-    showNotification(`${msg}!`)
+    var loser = !isWhiteMove() ? "Black" : "White"
+    var msg = `${loser} surrendered!`
+
+    showNotification(msg);
     updateMoveHistory()
     addGameResult(msg)
 }
@@ -397,7 +400,6 @@ function handleCanvasClick(event) {
 
         let cTo = toChessNotation(xC, yC);
         let allowedUserMove = possibleMovesVerbose.find(v => v.to == cTo);
-        // clear blue dots
 
         if (p && allowedUserMove) {
             selectedSquare = [-1, -1];
@@ -420,10 +422,14 @@ function handleCanvasClick(event) {
     }
 }
 
+function isWhiteMove() {
+    return window.chessGame.turn() == 'w';
+}
+
 function handleGameState(move) {
-    var nextTurn = window.chessGame.turn();
-    let prevColor = nextTurn == 'w' ? 'Black' : 'White'
-    let nextColor = nextTurn == 'b' ? 'Black' : 'White'
+    var nextTurnWhite = isWhiteMove();
+    let prevColor = nextTurnWhite ? 'Black' : 'White'
+    let nextColor = !nextTurnWhite ? 'Black' : 'White'
 
     if (move.isCapture()) {
         let cp = pieceToUtf8Image.get(move.captured);
@@ -443,7 +449,7 @@ function handleGameState(move) {
         } else {
             var msg = `${prevColor} won`
             showNotification(`${msg}!`)
-            addGameResult(nextTurn == 'w' ? "0-1" : "1-0")
+            addGameResult(nextTurnWhite ? "0-1" : "1-0")
             addGameResult(msg)
         }
 
