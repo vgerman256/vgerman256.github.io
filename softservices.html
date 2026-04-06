@@ -13,38 +13,39 @@
         .active-lang { display: block; }
         span.active-lang { display: inline; }
         .hero {
-            padding: 16px 24px;
-            margin: 12px 0;
+            padding: 16px 0;
+            margin: 4px 0;
         }
         .hero h2 { margin-bottom: 8px; }
         .hero p  { margin-bottom: 6px; }
         .lang-btn-active { background-color: #dbeafe; }
+        body { margin-top: 0; padding-top: 0; }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
-
-        <!-- Language Switcher -->
-        <div class="text-right" style="margin-top: 12px;">
-            <button id="btn-en" onclick="setLanguage('en')"
-                class="btn btn-xs btn-default">EN</button>
-            <button id="btn-pl" onclick="setLanguage('pl')"
-                class="btn btn-xs btn-default">PL</button>
-        </div>
+    <div class="container-fluid">
 
         <!-- Hero -->
         <div class="hero">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                <div>
+                    <h2 class="lang-content en" style="margin:0;">End-to-End Software Solutions for Your Business</h2>
+                    <h2 class="lang-content pl" style="margin:0;">Kompleksowe Rozwiązania Softwarowe dla Twojego Biznesu</h2>
+                </div>
+                <div style="white-space:nowrap; margin-left:12px; flex-shrink:0;">
+                    <button id="btn-en" onclick="setLanguage('en')" class="btn btn-xs btn-default">EN</button>
+                    <button id="btn-pl" onclick="setLanguage('pl')" class="btn btn-xs btn-default">PL</button>
+                </div>
+            </div>
             <div class="lang-content en">
-                <h2>End-to-End Software Solutions for Your Business</h2>
                 <p>We design, build, and support software tailored to your needs — from quick fixes and automations to full-scale web and mobile applications.</p>
-                <p>Whether you are a startup, a growing SME, or an established enterprise, we deliver reliable solutions on time and within budget. Available locally in Szczecin and remotely across Europe.</p>
+                <p>Whether you are a startup, a growing mid-size company, or a large enterprise, we deliver reliable solutions on time and within budget. Available locally in Szczecin and remotely across Europe.</p>
             </div>
             <div class="lang-content pl">
-                <h2>Kompleksowe Rozwiązania Softwarowe dla Twojego Biznesu</h2>
                 <p>Projektujemy, budujemy i wspieramy oprogramowanie dopasowane do Twoich potrzeb — od szybkich poprawek i automatyzacji po rozbudowane aplikacje webowe i mobilne.</p>
-                <p>Niezależnie czy jesteś startupem, rozwijającym się MŚP czy dużą firmą — dostarczamy niezawodne rozwiązania na czas i w ramach budżetu. Działamy lokalnie w Szczecinie i zdalnie w całej Europie.</p>
+                <p>Niezależnie czy jesteś startupem, rozwijającą się firmą średniej wielkości czy dużym przedsiębiorstwem — dostarczamy niezawodne rozwiązania na czas i w ramach budżetu. Działamy lokalnie w Szczecinie i zdalnie w całej Europie.</p>
             </div>
             <p><em>
                 <span class="lang-content en">Free initial consultation available for new customers.</span>
@@ -94,14 +95,14 @@
 
         <!-- Contact Form -->
         <div id="contact-ss" class="row" style="margin-bottom: 40px;">
-            <div class="col-md-8 col-md-offset-2">
+            <div class="col-md-8">
                 <div class="panel panel-default">
-                    <div class="panel-heading text-center">
+                    <div class="panel-heading">
                         <h3 class="panel-title lang-content en">Contact Us</h3>
                         <h3 class="panel-title lang-content pl">Skontaktuj się</h3>
                     </div>
                     <div class="panel-body">
-                        <p class="text-center text-muted">
+                        <p class="text-muted">
                             <span class="lang-content en">Let's discuss your project. B2B contracts available.</span>
                             <span class="lang-content pl">Porozmawiajmy o Twoim projekcie. Wystawiamy faktury B2B.</span>
                         </p>
