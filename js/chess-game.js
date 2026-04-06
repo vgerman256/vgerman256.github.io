@@ -354,7 +354,7 @@ async function doMove(allowedUserMove, promotionHandled = false) {
         let canMove = handleGameState(moveResult);
 
         if (canMove && isWithRobotPlay()) {
-            computerMove = await getComputerMoveAsync(moveResult);
+            const computerMove = await getComputerMoveAsync(moveResult);
             let computerMoveResult = window.chessGame.move(computerMove);
             updateStateBoard(window.chessGame.board(), computerMoveResult);
             updateMovedSelection()
