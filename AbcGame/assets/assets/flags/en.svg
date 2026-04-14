@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40">
+  <!-- Blue background -->
+  <rect width="60" height="40" fill="#012169"/>
+  <!-- White diagonal cross (saltire) -->
+  <line x1="0" y1="0" x2="60" y2="40" stroke="white" stroke-width="8"/>
+  <line x1="60" y1="0" x2="0" y2="40" stroke="white" stroke-width="8"/>
+  <!-- Red diagonal cross (thin, on top of white) -->
+  <line x1="0" y1="0" x2="60" y2="40" stroke="#C8102E" stroke-width="4"/>
+  <line x1="60" y1="0" x2="0" y2="40" stroke="#C8102E" stroke-width="4"/>
+  <!-- White horizontal cross -->
+  <rect x="0" y="14" width="60" height="12" fill="white"/>
+  <!-- White vertical cross -->
+  <rect x="24" y="0" width="12" height="40" fill="white"/>
+  <!-- Red horizontal cross -->
+  <rect x="0" y="16" width="60" height="8" fill="#C8102E"/>
+  <!-- Red vertical cross -->
+  <rect x="26" y="0" width="8" height="40" fill="#C8102E"/>
+</svg>
