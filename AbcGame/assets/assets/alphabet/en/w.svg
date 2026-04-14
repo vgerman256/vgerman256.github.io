@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" rx="20" fill="#F5F9FF"/>
+  <polygon points="100,28 168,158 32,158" fill="#9B59B6" opacity="0.85"/>
+  <text x="100" y="105" font-size="24" text-anchor="middle" dominant-baseline="middle" fill="white" font-family="sans-serif" font-weight="bold">Whale</text>
+  <text x="100" y="185" font-size="22" text-anchor="middle" fill="#1A1A2E" font-family="sans-serif" font-weight="bold">Ww</text>
+</svg>
