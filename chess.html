@@ -17,23 +17,22 @@
     <div id="notification-container"></div>
     <br>
 
-    <label id="blackCaptured"></label>
-    <p align="center">
-    <div style="display: flex;">
-        <div style="position: relative; display: inline-block;">
-            <canvas id="canvas-border" width="640" height="640"
-                style="border:1px solid #ffffff;position: absolute; left: 0; top: 0;"></canvas>
-            <canvas id="canvas-chess" width="600" height="600"
-                style="border:1px solid rgb(0, 0, 0);position: relative; margin: 20px; border: 2px solid #333;"></canvas>
+    <div class="chess-layout">
+        <div class="board-column">
+            <label id="blackCaptured" class="captured-panel"></label>
+            <div style="position: relative; display: inline-block;">
+                <canvas id="canvas-border" width="640" height="640"
+                    style="border:1px solid #ffffff;position: absolute; left: 0; top: 0;"></canvas>
+                <canvas id="canvas-chess" width="600" height="600"
+                    style="border:1px solid rgb(0, 0, 0);position: relative; margin: 20px; border: 2px solid #333;"></canvas>
+            </div>
+            <label id="whiteCaptured" class="captured-panel"></label>
         </div>
-        <div>
-            <h3 style="margin-left: 20px;">History</h3>
+        <div class="chess-history">
+            <h3>History</h3>
             <ol id="movesHistiry" class="scroll-list" reversed></ol>
         </div>
     </div>
-    </p>
-
-    <label id="whiteCaptured"></label>
 
     <div class="button-container" style="margin-left: 20px;">
         <p>Game complexity:

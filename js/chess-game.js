@@ -66,10 +66,16 @@ newGameButton.addEventListener('click', () => {
     drawChess();
     updateMoveHistory();
     updateButtonsState();
+    updateCapturedOrientation();
 });
+
 
 function isWithRobotPlay() {
     return isWithRobotPlayCheckbox.checked;
+}
+
+function updateCapturedOrientation() {
+    blackCaptured.classList.toggle('panel-rotated', !isWithRobotPlay());
 }
 
 function defaultButtonState() {
@@ -164,6 +170,7 @@ function loadSavedGame() {
             updateMovedSelection();
         }
 
+        updateCapturedOrientation();
         showNotification('Game restored!');
         return true;
     } catch {
@@ -196,6 +203,7 @@ function clearBoard() {
 
     defaultButtonState();
     htmlMovesHistory.innerHTML = '';
+    updateCapturedOrientation();
 }
 
 function surrenderGame() {
@@ -361,6 +369,16 @@ function objToString(obj) {
 }
 
 const chessCanvas = document.getElementById('canvas-chess');
+const borderCanvas = document.getElementById('canvas-border');
+
+function resizeCanvases() {
+    const size = Math.min(window.innerWidth - 20, 600);
+    if (chessCanvas.width === size) return;
+    chessCanvas.width = size;
+    chessCanvas.height = size;
+    borderCanvas.width = size + 40;
+    borderCanvas.height = size + 40;
+}
 
 function boxWidth() {
     return chessCanvas.width / 8;
@@ -656,6 +674,7 @@ function updateStateAt(x, y) {
 }
 
 function drawChess() {
+    resizeCanvases();
     fillBoard();
     drawCoordinates();
 }
@@ -759,6 +778,8 @@ function createNotification(text) {
         setTimeout(() => toast.remove(), 500); // Remove after fade animation
     }, 3000);
 }
+
+window.addEventListener('resize', () => drawChess());
 
 // Expose functions called via inline onclick attributes in HTML
 window.undoMove = undoMove;
