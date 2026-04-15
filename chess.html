@@ -34,17 +34,21 @@
         </div>
     </div>
 
-    <div class="button-container" style="margin-left: 20px;">
-        <p>Game complexity:
-            <input type="number" id="difficultyInput" min="0" max="20" value="1"> of 20.
-        </p>
-
-        <button type="button" id="newGameButton">Start new game</button>
-        <button disabled type="button" id="undoButton" onclick='undoMove()'>Undo</button>
-        <button disabled type="button" id="surrenderButton">Surrender</button>
-
-        <input type="checkbox" id="gameType" name="gameType" value="withRobot" checked>
-        <label for="withRobot">Play with robot</label><br>
+    <div class="button-container">
+        <div id="settings-panel">
+            <label>Game complexity:
+                <input type="number" id="difficultyInput" min="0" max="20" value="1"> of 20
+            </label>
+            <label>
+                <input type="checkbox" id="gameType" name="gameType" value="withRobot" checked>
+                Play with robot
+            </label>
+        </div>
+        <div>
+            <button type="button" id="newGameButton">Start new game</button>
+            <button disabled type="button" id="undoButton" onclick='undoMove()'>Undo</button>
+            <button disabled type="button" id="surrenderButton">Surrender</button>
+        </div>
     </div>
 
     <br>

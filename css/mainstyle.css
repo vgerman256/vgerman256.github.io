@@ -48,14 +48,22 @@ p {
     flex-direction: column;
 }
 
+.button-container {
+    margin-left: 20px;
+}
+
 .chess-layout {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
+    margin-left: 20px;
 }
 
 .chess-history {
     margin-left: 20px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
 }
 
 @media (max-width: 680px) {
@@ -67,6 +75,19 @@ p {
     .scroll-list {
         max-height: 180px;
     }
+}
+
+#settings-panel {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
+    font-family: verdana;
+    font-size: 14px;
 }
 
 dialog {
