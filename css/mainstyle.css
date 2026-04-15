@@ -29,18 +29,65 @@ p {
     font-family: verdana;
 }
 
-#whiteCaptured {
-    font-size: larger;
-    align-items: left;
+.captured-panel {
     font-family: verdana;
+    font-size: 1.5rem;
+    letter-spacing: 3px;
+    padding: 4px 20px;
+    min-height: 2rem;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
 }
 
-#blackCaptured {
-    font-size: larger;
-    display: inline-block;
+.panel-rotated {
     transform: rotate(180deg);
-    align-items: left;
+}
+
+.board-column {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.button-container {
+    margin-left: 20px;
+}
+
+.chess-layout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin-left: 20px;
+}
+
+.chess-history {
+    margin-left: 20px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
+}
+
+@media (max-width: 680px) {
+    .chess-history {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .scroll-list {
+        max-height: 180px;
+    }
+}
+
+#settings-panel {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
     font-family: verdana;
+    font-size: 14px;
 }
 
 dialog {
@@ -91,4 +138,40 @@ dialog {
 .fade-out {
     opacity: 0;
     transform: scale(0.9);
+}
+
+#game-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: powderblue;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    z-index: 1000;
+    border-top: 1px solid #aac;
+}
+
+#game-nav a {
+    font-family: verdana;
+    font-size: 14px;
+    color: darkblue;
+    text-decoration: none;
+}
+
+#game-nav a:hover {
+    text-decoration: underline;
+}
+
+#game-frame {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 40px;
+    border: none;
+    width: 100%;
+    height: calc(100vh - 40px);
 }

@@ -8,6 +8,13 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            if (window.location.hash) {
+                $('a[href="' + window.location.hash + '"]').tab('show');
+            }
+        });
+    </script>
 </head>
 
 <body>
@@ -33,7 +40,8 @@
                 <p>
                 <h3>My pet projects</h3>
                 <li>
-                    <a href="/AbcGame/" target="_blank">ABC for children play now!</a>
+                    <a href="abcgame.html" class="hidden-xs">ABC for children play now!</a>
+                    <a href="/AbcGame/" target="_blank" class="visible-xs">ABC for children play now!</a>
                 </li>
                 <li>
                     <a href="math.html">A bit math. Let's draw y = &#402;(x)</a>
