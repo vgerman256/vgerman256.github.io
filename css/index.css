@@ -1,0 +1,24 @@
+
+body{
+     padding-top: 16px;
+}
+.profile-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.profile-header h2 {
+    margin-top: 0;
+}
+
+.profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    object-fit: cover;
+    border: 1px solid darkblue;
+    box-shadow: 0 0 0 2px powderblue;
+}
