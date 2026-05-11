@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vitly's about</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/mainstyle.css">
+</head>
+<div class="container-fluid">
+    <div class="game-area">
+        <!-- The outer border canvas -->
+        <canvas id="canvas-border"></canvas>
+        <!-- The inner chessboard canvas -->
+        <canvas id="canvas-chess"></canvas>
+    </div>
+</div>
+<script>
+    function resizeGame() {
+        const chess = document.getElementById('canvas-chess');
+        const border = document.getElementById('canvas-border');
+        const dpr = window.devicePixelRatio || 1;
+
+        // 1. Get the current CSS size of the chessboard
+        const chessRect = chess.getBoundingClientRect();
+
+        // 2. Set Chess Internal Resolution
+        chess.width = chessRect.width * dpr;
+        chess.height = chessRect.height * dpr;
+
+        // 3. CONNECT: Set Border Internal Resolution (+40px offset)
+        // We multiply the offset by DPR so it stays sharp on high-res screens
+        const offset = 40 * dpr;
+        border.width = chess.width + offset;
+        border.height = chess.height + offset;
+
+        // 4. Update Border CSS to match
+        border.style.width = (chessRect.width + 40) + "px";
+        border.style.height = (chessRect.height + 40) + "px";
+
+        // 5. Draw something to test
+        drawBoard();
+    }
+
+    function drawBoard() {
+        const bCtx = document.getElementById('canvas-border').getContext('2d');
+        const cCtx = document.getElementById('canvas-chess').getContext('2d');
+
+        // Draw a simple wood-colored border
+        bCtx.fillStyle = "#8B4513";
+        bCtx.fillRect(0, 0, bCtx.canvas.width, bCtx.canvas.height);
+
+        // Draw a placeholder board
+        cCtx.fillStyle = "#f0d9b5";
+        cCtx.fillRect(0, 0, cCtx.canvas.width, cCtx.canvas.height);
+    }
+
+    window.addEventListener('resize', resizeGame);
+    window.onload = resizeGame;
+
+</script>
+
+</html>
