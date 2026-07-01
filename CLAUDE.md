@@ -2,117 +2,73 @@
 
 ## Project Overview
 
-Static personal website (no build tools, no package manager). Pure HTML/CSS/JS files served directly. Pages: `index.html` (home), `chess.html` (chess game), `math.html` (function grapher), `about.html`.
+Personal blog + project showcase, built with Astro and deployed to GitHub Pages via GitHub Actions. Home (`/`) is a reverse-chronological list of short posts, one per pet project; `/about/` holds the owner's bio. See `specs/blog-spec-v1.0.md` for the full original spec this site was built from.
+
+## ⚠️ Frozen static passthroughs — read this first
+
+These files live under `public/` and are copied verbatim to the deployed site. **They must never be edited, reformatted, or "improved."** They predate the Astro migration, are fully functional as-is, and are out of scope for any refactor, lint, or style pass:
+
+- `public/chess.html`, `public/math.html`, `public/abcgame.html`, `public/softservices.html`
+- `public/js/**` (`chess.js`, `chess-game.js`, `StockfishWeb.js`, `stockfish.*`)
+- `public/AbcGame/**` (a separate Flutter-built app, embedded via iframe from `abcgame.html`)
+- `public/css/mainstyle.css` (required by the three passthrough HTML pages above — do not delete or rename)
+
+If a change to any of these is ever genuinely needed, treat it as an explicit exception requiring the user's direct sign-off — not routine work. `public/softservices.html` additionally is intentionally **not linked** from the site nav/home; don't add a link to it without being asked.
 
 ## Stack
 
-- **HTML5** — semantic elements (`<header>`, `<main>`, `<footer>`, `<dialog>`)
-- **CSS3** — custom properties, flexbox, keyframe animations
-- **Vanilla JS** — ES6+, modules, async/await
-- **Bootstrap 3.4.1** — grid and tab components (CDN)
-- **jQuery 3.7.1** — DOM utilities (CDN)
-- **PixiJS 8.16.0** — math grapher WebGL rendering (CDN)
-- **Stockfish.js + WASM** — chess engine (local `/js/`)
+- **Astro** (Content Layer API — `glob()` loader, `src/content.config.ts`)
+- **TypeScript** — strict (`astro/tsconfigs/strict`)
+- **pnpm** — package manager; `pnpm-lock.yaml` is committed
+- **Markdown** — built-in remark/rehype pipeline, `remark-gfm`, a custom reading-time remark plugin (`src/lib/reading-time.mjs`), Shiki for code highlighting
+- **Fonts** — self-hosted via Fontsource (`@fontsource-variable/fraunces`, `hanken-grotesk`, `jetbrains-mono`); no external font CDN
+- **Integrations** — `@astrojs/rss`, `@astrojs/sitemap`
+- **Deploy** — GitHub Actions (`.github/workflows/deploy.yml`) via `withastro/action` + `actions/deploy-pages`, no custom domain (`site: https://vgerman256.github.io`, `base: '/'`)
 
-No bundler, no TypeScript, no linting tools.
+No client-side UI framework. Vanilla Astro components + plain CSS only, on new pages — never reintroduce Bootstrap/jQuery outside the frozen passthrough files listed above (they stay CDN-only, isolated to those files).
 
 ## File Structure
 
 ```
 /
-├── index.html
-├── chess.html
-├── math.html
-├── about.html
-├── css/
-│   └── mainstyle.css      # Shared stylesheet (imported on all pages)
-└── js/
-    ├── chess.js            # Chess library (do not modify)
-    ├── StockfishWeb.js     # Stockfish wrapper
-    └── stockfish.*         # Engine files (do not modify)
+├── .github/workflows/deploy.yml
+├── public/
+│   ├── chess.html, math.html, abcgame.html, softservices.html   # frozen, see above
+│   ├── css/mainstyle.css                                         # frozen, required by the above
+│   ├── js/, AbcGame/                                             # frozen
+│   ├── robots.txt, favicon.svg
+├── src/
+│   ├── content.config.ts       # posts collection + zod schema
+│   ├── content/posts/*.md      # one .md per post
+│   ├── components/             # BaseHead, Header, Footer, PostListItem, FormattedDate
+│   ├── layouts/                # BaseLayout (html shell), PostLayout (article view)
+│   ├── pages/                  # index, about, 404, rss.xml.js, posts/[...slug].astro
+│   ├── styles/global.css       # design tokens + base typography
+│   └── lib/reading-time.mjs    # remark plugin
+├── astro.config.mjs, tsconfig.json, package.json, pnpm-lock.yaml
+└── specs/blog-spec-v1.0.md     # original design spec
 ```
 
-## HTML Conventions
+## Content authoring — adding a post
 
-- **4-space indentation** throughout
-- All pages link `css/mainstyle.css`
-- Bootstrap grid: use `container` or `container-fluid`; tabs with `nav nav-tabs` + `tab-content`
-- Element IDs and class names: **kebab-case** (e.g. `canvas-chess`, `button-container`, `notification-container`)
-- Avoid deprecated attributes like `align="center"` — use CSS instead
-- `<canvas>` elements for all graphics rendering
-- `<dialog>` for modal confirmations
-- Footer always contains visitor counter image + ad iframe
+1. Add `src/content/posts/<slug>.md` with frontmatter: `title`, `description`, `pubDate`, optional `updatedDate`, `draft`, `tags`, `slug` (URL override), `heroImage`, `projectUrl` (link to a live project page, rendered as a "Launch this project" link).
+2. `draft: true` renders in `astro dev` but is excluded from production builds, RSS, and the sitemap.
+3. Reading time is computed automatically at build time — no frontmatter field needed.
+4. No manifest or index file to update — the home page and RSS feed are generated from the collection automatically.
 
-## CSS Conventions
+## Astro/CSS/TS Conventions
 
-- **4-space indentation**
-- CSS custom properties in `:root`:
-  ```css
-  :root {
-      --primary-bg: powderblue;
-  }
-  ```
-- Prefer ID selectors for page-specific elements; class selectors for reusable components
-- Keyframe animations defined in `mainstyle.css` (e.g. `slideIn`, `fade-out`)
-- Font family: `verdana`
-- Z-index layers: notifications at `9999`, modals at `1000`
-- Canvas sizing done via JS (`getBoundingClientRect`) — do not set fixed canvas dimensions in CSS
-
-## JavaScript Conventions
-
-- **4-space indentation**
-- **camelCase** for variables and functions: `selectedSquare`, `handleCanvasClick`
-- **UPPER_SNAKE_CASE** for constants: `STORAGE_KEY`, `wasmSupported`
-- **PascalCase** for classes: `Chess`, `StockfishWeb`
-- Prefer `let`/`const` over `var`
-- Use `===` (strict equality), not `==`
-- Use single quotes for strings (preferred), template literals for interpolation
-- Arrow functions for callbacks: `element.addEventListener('click', () => { ... })`
-- `async/await` for async operations; wrap in `try/catch`
-- Array methods: `.map()`, `.forEach()`, `.find()`, `.filter()`
-- Object/array destructuring and spread operator where appropriate
-
-**Module pattern:**
-```js
-import { Chess, Move } from './js/chess.js';
-window.Chess = Chess;  // export to global scope for cross-script access
-```
-
-**Canvas drawing pattern:**
-```js
-ctx.save();
-ctx.translate(x, y);
-// ... draw
-ctx.restore();
-```
-
-**Error handling:**
-```js
-try {
-    const f = new Function('x', 'Math', `return ${formula};`);
-    return f(x, Math);
-} catch {
-    return undefined;
-}
-```
-
-**Persistence:** use `localStorage` with a named `STORAGE_KEY` constant.
-
-## Adding New Pages
-
-1. Create `pagename.html` at the root
-2. Include Bootstrap 3.4.1 and jQuery 3.7.1 from CDN (match existing version)
-3. Link `css/mainstyle.css`
-4. Use `<header>`, `<main>`, `<footer>` structure
-5. Footer must include visitor counter + ad iframe (copy from existing page)
-6. Add a link/tab to `index.html` navigation
+- 4-space indentation in `.astro`, `.ts`, `.css`, and `.md` frontmatter, consistent with the rest of the repo.
+- kebab-case for CSS classes and content slugs.
+- camelCase for TS/JS variables and functions; PascalCase for components.
+- CSS custom properties in `:root` (see `src/styles/global.css`) for color tokens; both light and dark values defined via `prefers-color-scheme`.
+- Prefer scoped `<style>` blocks inside `.astro` components over global CSS, except for tokens/base typography in `global.css`.
 
 ## What Not To Do
 
-- Do not introduce a build system, bundler, or package manager
-- Do not add TypeScript
-- Do not upgrade Bootstrap (site uses 3.x, not 4.x/5.x)
-- Do not modify `chess.js`, `stockfish.js`, `stockfish.wasm`, or `stockfish.wasm.js`
-- Do not use `document.write()`
-- Do not add inline `onclick=` attributes — use `addEventListener` instead
-- Do not add unnecessary abstractions for one-off operations
+- Do not edit, reformat, or move the frozen static passthrough files listed above.
+- Do not add a client-side UI framework (React/Vue/etc.) — vanilla Astro + CSS only.
+- Do not reintroduce Bootstrap or jQuery into any new Astro page/component.
+- Do not use `npm`/`yarn` — this project standardizes on `pnpm`.
+- Do not add tag/category index pages, comments, search, or an admin/CMS layer — explicitly deferred (see `specs/blog-spec-v1.0.md` §14).
+- Do not add unnecessary abstractions for one-off operations.

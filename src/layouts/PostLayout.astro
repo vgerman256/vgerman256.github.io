@@ -1,0 +1,82 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+
+interface Props {
+    title: string;
+    description: string;
+    pubDate: Date;
+    updatedDate?: Date;
+    minutesRead?: string;
+    projectUrl?: string;
+}
+
+const { title, description, pubDate, updatedDate, minutesRead, projectUrl } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+    <article class="prose">
+        <header>
+            <p class="meta">
+                <FormattedDate date={pubDate} />
+                {minutesRead && <> · {minutesRead}</>}
+                {updatedDate && <> · updated <FormattedDate date={updatedDate} /></>}
+            </p>
+            <h1>{title}</h1>
+            <p class="description">{description}</p>
+        </header>
+        <hr />
+        <slot />
+        {projectUrl && (
+            <p class="launch">
+                <a href={projectUrl}>Launch this project →</a>
+            </p>
+        )}
+    </article>
+</BaseLayout>
+
+<style>
+    .prose :global(h2) {
+        margin-top: 2rem;
+    }
+
+    .prose :global(blockquote) {
+        margin: 1.5rem 0;
+        padding-left: 1rem;
+        border-left: 2px solid var(--border);
+        color: var(--muted);
+    }
+
+    .prose :global(pre) {
+        padding: 1rem;
+        border-radius: 6px;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+    }
+
+    .prose :global(code) {
+        font-family: var(--font-mono);
+        background: var(--code-bg);
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+    }
+
+    .prose :global(pre code) {
+        background: none;
+        padding: 0;
+    }
+
+    .prose :global(img) {
+        max-width: 100%;
+        border-radius: 6px;
+    }
+
+    .description {
+        color: var(--muted);
+    }
+
+    .launch {
+        margin-top: 2rem;
+        font-family: var(--font-mono);
+    }
+</style>

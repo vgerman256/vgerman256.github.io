@@ -1,0 +1,48 @@
+---
+import FormattedDate from './FormattedDate.astro';
+
+interface Props {
+    slug: string;
+    title: string;
+    description: string;
+    pubDate: Date;
+    minutesRead?: string;
+}
+
+const { slug, title, description, pubDate, minutesRead } = Astro.props;
+---
+
+<li class="post-item">
+    <p class="meta">
+        <FormattedDate date={pubDate} />
+        {minutesRead && <> · {minutesRead}</>}
+    </p>
+    <h2><a href={`/posts/${slug}/`}>{title}</a></h2>
+    <p class="description">{description}</p>
+</li>
+
+<style>
+    .post-item {
+        list-style: none;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .post-item:first-child {
+        padding-top: 0;
+    }
+
+    .post-item h2 {
+        margin: 0.35rem 0;
+        font-size: 1.4rem;
+    }
+
+    .post-item h2 a {
+        text-decoration: none;
+    }
+
+    .description {
+        margin: 0;
+        color: var(--muted);
+    }
+</style>

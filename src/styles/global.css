@@ -1,0 +1,103 @@
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/hanken-grotesk';
+@import '@fontsource-variable/jetbrains-mono';
+
+:root {
+    --bg: #FBFAF7;
+    --text: #1A1A18;
+    --muted: #57564F;
+    --faint: #8A8980;
+    --border: #E6E3DB;
+    --accent: #D85A30;
+    --code-bg: #F3F1EA;
+
+    --font-serif: 'Fraunces Variable', Georgia, serif;
+    --font-sans: 'Hanken Grotesk Variable', sans-serif;
+    --font-mono: 'JetBrains Mono Variable', monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #16150F;
+        --text: #ECEAE1;
+        --muted: #A9A79C;
+        --faint: #6F6E66;
+        --border: #2A2926;
+        --accent: #E2724A;
+        --code-bg: #201F1A;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    color-scheme: light dark;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 18px;
+    line-height: 1.7;
+    font-weight: 400;
+}
+
+.wrapper {
+    max-width: 68ch;
+    margin: 0 auto;
+    padding: 2.4rem 1.5rem;
+}
+
+a {
+    color: inherit;
+    text-decoration-color: var(--border);
+}
+
+a:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+}
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--accent);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    z-index: 10;
+}
+
+.skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+}
+
+h1, h2, h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.meta {
+    font-family: var(--font-mono);
+    color: var(--faint);
+    font-size: 0.85rem;
+}
+
+hr, .hairline {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
