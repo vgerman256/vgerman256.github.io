@@ -8,12 +8,14 @@ Personal blog + project showcase, built with Astro and deployed to GitHub Pages 
 
 These files live under `public/` and are copied verbatim to the deployed site. **They must never be edited, reformatted, or "improved."** They predate the Astro migration, are fully functional as-is, and are out of scope for any refactor, lint, or style pass:
 
-- `public/chess.html`, `public/math.html`, `public/abcgame.html`, `public/softservices.html`
+- `public/math.html`, `public/abcgame.html`, `public/softservices.html`
 - `public/js/**` (`chess.js`, `chess-game.js`, `StockfishWeb.js`, `stockfish.*`)
 - `public/AbcGame/**` (a separate Flutter-built app, embedded via iframe from `abcgame.html`)
 - `public/css/mainstyle.css` (required by the three passthrough HTML pages above — do not delete or rename)
 
 If a change to any of these is ever genuinely needed, treat it as an explicit exception requiring the user's direct sign-off — not routine work. `public/softservices.html` additionally is intentionally **not linked** from the site nav/home; don't add a link to it without being asked.
+
+`public/chess.html` is no longer frozen. It is a hand-maintained static page restyled to match the site. Its inline `<style>` copies the tokens from `global.css` and loads the fonts from `public/fonts/`. It reproduces the `Header.astro`/`Footer.astro` markup by hand, so **when the nav in `Header.astro` changes, update `chess.html` too**. It must stay at `/chess.html`, because `chess-game.js` (still frozen) loads Stockfish from the relative path `./js/`. Keep every element ID, inline `onclick` handler and class that script relies on.
 
 ## Stack
 
@@ -33,16 +35,19 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 /
 ├── .github/workflows/deploy.yml
 ├── public/
-│   ├── chess.html, math.html, abcgame.html, softservices.html   # frozen, see above
+│   ├── math.html, abcgame.html, softservices.html                # frozen, see above
+│   ├── chess.html                                                # static, mirrors site chrome by hand
 │   ├── css/mainstyle.css                                         # frozen, required by the above
 │   ├── js/, AbcGame/                                             # frozen
+│   ├── fonts/                                                    # Latin woff2 copies for chess.html
 │   ├── robots.txt, favicon.svg
 ├── src/
 │   ├── content.config.ts       # posts collection + zod schema
 │   ├── content/posts/*.md      # one .md per post
+│   ├── content/about.md        # /about/ page text + profile header frontmatter
 │   ├── components/             # BaseHead, Header, Footer, PostListItem, FormattedDate
 │   ├── layouts/                # BaseLayout (html shell), PostLayout (article view)
-│   ├── pages/                  # index, about, 404, rss.xml.js, posts/[...slug].astro
+│   ├── pages/                  # index, games, about, 404, rss.xml.js, posts/[...slug].astro
 │   ├── styles/global.css       # design tokens + base typography
 │   └── lib/reading-time.mjs    # remark plugin
 ├── astro.config.mjs, tsconfig.json, package.json, pnpm-lock.yaml

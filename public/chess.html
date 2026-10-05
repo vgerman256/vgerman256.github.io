@@ -4,84 +4,546 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Chess</title>
+    <title>Chess · Vitaly German</title>
+    <meta name="description" content="Can you beat a chess robot? Play against Stockfish running in your browser.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/mainstyle.css">
+    <!-- Static page: mirrors src/styles/global.css tokens and the Header/Footer components by hand. -->
+    <style>
+        @font-face {
+            font-family: 'Fraunces Variable';
+            font-style: normal;
+            font-display: swap;
+            font-weight: 100 900;
+            src: url(/fonts/fraunces-latin-wght-normal.woff2) format('woff2-variations');
+        }
+
+        @font-face {
+            font-family: 'Hanken Grotesk Variable';
+            font-style: normal;
+            font-display: swap;
+            font-weight: 100 900;
+            src: url(/fonts/hanken-grotesk-latin-wght-normal.woff2) format('woff2-variations');
+        }
+
+        @font-face {
+            font-family: 'JetBrains Mono Variable';
+            font-style: normal;
+            font-display: swap;
+            font-weight: 100 800;
+            src: url(/fonts/jetbrains-mono-latin-wght-normal.woff2) format('woff2-variations');
+        }
+
+        :root {
+            --bg: #FBFAF7;
+            --text: #1A1A18;
+            --muted: #57564F;
+            --faint: #8A8980;
+            --border: #E6E3DB;
+            --accent: #D85A30;
+            --code-bg: #F3F1EA;
+
+            --font-serif: 'Fraunces Variable', Georgia, serif;
+            --font-sans: 'Hanken Grotesk Variable', sans-serif;
+            --font-mono: 'JetBrains Mono Variable', monospace;
+
+            /* Fixed in both themes: chess-game.js draws coordinates in brown on a transparent canvas. */
+            --board-frame: #EFE9DC;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #16150F;
+                --text: #ECEAE1;
+                --muted: #A9A79C;
+                --faint: #6F6E66;
+                --border: #2A2926;
+                --accent: #E2724A;
+                --code-bg: #201F1A;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            color-scheme: light dark;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-sans);
+            font-size: 18px;
+            line-height: 1.7;
+            font-weight: 400;
+        }
+
+        .wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2.4rem 1.5rem;
+        }
+
+        a {
+            color: inherit;
+            text-decoration-color: var(--border);
+        }
+
+        a:hover {
+            color: var(--accent);
+            text-decoration-color: var(--accent);
+        }
+
+        h1, h3 {
+            font-family: var(--font-serif);
+            font-weight: 500;
+            line-height: 1.25;
+        }
+
+        .meta {
+            font-family: var(--font-mono);
+            color: var(--faint);
+            font-size: 0.85rem;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
+        /* Header (mirrors src/components/Header.astro) */
+        .site-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 0.75rem 1.5rem;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .wordmark {
+            font-family: var(--font-serif);
+            font-size: 1.25rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .accent-mark {
+            color: var(--accent);
+        }
+
+        .site-header nav {
+            display: flex;
+            gap: 1.25rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+
+        .site-header nav a {
+            text-decoration: none;
+            color: var(--muted);
+        }
+
+        .site-header nav a:hover {
+            color: var(--accent);
+        }
+
+        /* Footer (mirrors src/components/Footer.astro) */
+        .site-footer {
+            margin-top: 2.4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        /* Page intro */
+        .page-title {
+            margin: 0 0 0.35rem;
+        }
+
+        .intro {
+            margin: 0 0 1.5rem;
+            color: var(--muted);
+        }
+
+        .back-link {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        /* Board + history */
+        .chess-layout {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+
+        .board-column {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 100%;
+        }
+
+        .board-frame {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .board-stack {
+            position: relative;
+            display: inline-block;
+            background: var(--board-frame);
+            border-radius: 6px;
+        }
+
+        #canvas-border {
+            position: absolute;
+            left: 0;
+            top: 0;
+            border: none;
+        }
+
+        #canvas-chess {
+            position: relative;
+            display: block;
+            margin: 20px;
+            border: 2px solid #1A1A18;
+            cursor: pointer;
+        }
+
+        .panel {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .captured-panel {
+            display: block;
+            min-height: 2.6rem;
+            padding: 0.2rem 1rem;
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+        }
+
+        .panel-rotated {
+            transform: rotate(180deg);
+        }
+
+        .chess-history {
+            flex: 1 1 220px;
+            padding: 0.75rem 1rem;
+        }
+
+        .chess-history h3 {
+            margin: 0 0 0.5rem;
+            font-size: 1.15rem;
+        }
+
+        .scroll-list {
+            max-height: 580px;
+            margin: 0;
+            padding-left: 2.2rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+
+        .scroll-list li::marker {
+            color: var(--faint);
+        }
+
+        /* chess-game.js sizes the board to innerWidth - 20, which plus the coordinate gutters is
+           always ~24px wider than the viewport. Bleed the frame to the screen edges and hide the
+           right gutter (duplicate rotated rank numbers) so all eight files stay visible. */
+        @media (max-width: 700px) {
+            .board-frame {
+                max-width: none;
+                margin: 0 -1.5rem;
+                overflow: hidden;
+            }
+
+            .board-stack {
+                margin-left: -4px;
+                border-radius: 0;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .chess-history {
+                flex-basis: 100%;
+            }
+
+            .scroll-list {
+                max-height: 180px;
+            }
+        }
+
+        /* Controls */
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        #settings-panel {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 0.75rem 1.5rem;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+        }
+
+        #settings-panel label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+
+        button {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.45rem 0.9rem;
+            cursor: pointer;
+            transition: border-color 0.15s ease, color 0.15s ease;
+        }
+
+        button:hover:not(:disabled) {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        button:disabled {
+            color: var(--faint);
+            cursor: not-allowed;
+        }
+
+        input[type="number"] {
+            width: 3.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.25rem 0.4rem;
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--accent);
+        }
+
+        input:disabled {
+            color: var(--faint);
+        }
+
+        /* Dialogs */
+        dialog,
+        .modal-box {
+            color: var(--text);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        dialog {
+            padding: 1.25rem 1.5rem;
+        }
+
+        dialog p {
+            margin-top: 0;
+        }
+
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        dialog form {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: flex-end;
+        }
+
+        #promotion-modal {
+            position: fixed;
+            z-index: 1000;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        .modal-box {
+            width: 240px;
+            margin: 15% auto;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .modal-box h3 {
+            margin: 0 0 0.75rem;
+        }
+
+        .modal-box button {
+            margin: 0.2rem;
+        }
+
+        /* Toasts (created by chess-game.js) */
+        #notification-container {
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .notification {
+            background: var(--text);
+            color: var(--bg);
+            font-size: 0.95rem;
+            padding: 0.7rem 1.5rem;
+            border-radius: 6px;
+            min-width: 200px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            animation: slideIn 0.4s ease forwards;
+            transition: all 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-out {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+    </style>
 </head>
 
 <body>
-    <header>
-        <h2 align="center">Can defeat a chess robot?</h2>
-    </header>
-    <div id="notification-container"></div>
-    <br>
+    <div class="wrapper">
+        <header class="site-header">
+            <a class="wordmark" href="/">Vitaly<span class="accent-mark">.</span>German</a>
+            <nav aria-label="Primary">
+                <a href="/">Writing</a>
+                <a href="/games/">Games</a>
+                <a href="/about/">About</a>
+                <a href="/rss.xml">RSS</a>
+            </nav>
+        </header>
 
-    <div class="chess-layout">
-        <div class="board-column">
-            <label id="blackCaptured" class="captured-panel"></label>
-            <div style="position: relative; display: inline-block;">
-                <canvas id="canvas-border" width="640" height="640"
-                    style="border:1px solid #ffffff;position: absolute; left: 0; top: 0;"></canvas>
-                <canvas id="canvas-chess" width="600" height="600"
-                    style="border:1px solid rgb(0, 0, 0);position: relative; margin: 20px; border: 2px solid #333;"></canvas>
+        <main>
+            <a class="back-link" href="/games/">&larr; All games</a>
+            <h1 class="page-title">Can you beat a chess robot?</h1>
+            <p class="intro">Play against Stockfish, running entirely in your browser.</p>
+
+            <div id="notification-container"></div>
+
+            <div class="chess-layout">
+                <div class="board-column">
+                    <label id="blackCaptured" class="captured-panel panel"></label>
+                    <div class="board-frame">
+                        <div class="board-stack">
+                            <canvas id="canvas-border" width="640" height="640"></canvas>
+                            <canvas id="canvas-chess" width="600" height="600"></canvas>
+                        </div>
+                    </div>
+                    <label id="whiteCaptured" class="captured-panel panel"></label>
+                </div>
+                <div class="chess-history panel">
+                    <h3>History</h3>
+                    <ol id="movesHistiry" class="scroll-list" reversed></ol>
+                </div>
             </div>
-            <label id="whiteCaptured" class="captured-panel"></label>
-        </div>
-        <div class="chess-history">
-            <h3>History</h3>
-            <ol id="movesHistiry" class="scroll-list" reversed></ol>
-        </div>
+
+            <div class="button-container">
+                <div id="settings-panel" class="panel">
+                    <label>Game complexity:
+                        <input type="number" id="difficultyInput" min="0" max="20" value="1"> of 20
+                    </label>
+                    <label>
+                        <input type="checkbox" id="gameType" name="gameType" value="withRobot" checked>
+                        Play with robot
+                    </label>
+                </div>
+                <div class="actions">
+                    <button type="button" id="newGameButton">Start new game</button>
+                    <button disabled type="button" id="undoButton" onclick='undoMove()'>Undo</button>
+                    <button disabled type="button" id="surrenderButton">Surrender</button>
+                </div>
+            </div>
+
+            <dialog id="surrenderDialog">
+                <p>Surrender to the robot... Are you sure?</p>
+                <form method="dialog">
+                    <button value="yes">Yes</button>
+                    <button value="cancel">Cancel</button>
+                </form>
+            </dialog>
+
+            <div id="promotion-modal" style="display:none;">
+                <div class="modal-box">
+                    <h3>Promote to:</h3>
+                    <button onclick="selectPromotion('q')">Queen</button>
+                    <button onclick="selectPromotion('r')">Rook</button>
+                    <button onclick="selectPromotion('b')">Bishop</button>
+                    <button onclick="selectPromotion('n')">Knight</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="meta">&copy; <span id="year">2026</span> Vitaly German</p>
+            <img
+                src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fvgerman256.github.io%2Fchess.html&label=Players&icon=github&color=%230a58ca&message=&style=social&tz=Europe%2FWarsaw"
+                alt="Players counter" height="20">
+        </footer>
     </div>
 
-    <div class="button-container">
-        <div id="settings-panel">
-            <label>Game complexity:
-                <input type="number" id="difficultyInput" min="0" max="20" value="1"> of 20
-            </label>
-            <label>
-                <input type="checkbox" id="gameType" name="gameType" value="withRobot" checked>
-                Play with robot
-            </label>
-        </div>
-        <div>
-            <button type="button" id="newGameButton">Start new game</button>
-            <button disabled type="button" id="undoButton" onclick='undoMove()'>Undo</button>
-            <button disabled type="button" id="surrenderButton">Surrender</button>
-        </div>
-    </div>
-
-    <br>
-
-    <dialog id="surrenderDialog">
-        <p>Surrender to the robot... Are you sure?</p>
-        <form method="dialog">
-            <button value="yes">Yes</button>
-            <button value="cancel">Cancel</button>
-        </form>
-    </dialog>
-
-    <div id="promotion-modal"
-        style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
-        <div
-            style="background:powderblue; margin:15% auto; padding:20px; width:200px; text-align:center; border-radius:8px;">
-            <h3>Promote to:</h3>
-            <button onclick="selectPromotion('q')">Queen</button>
-            <button onclick="selectPromotion('r')">Rook</button>
-            <button onclick="selectPromotion('b')">Bishop</button>
-            <button onclick="selectPromotion('n')">Knight</button>
-        </div>
-    </div>
-    <a style="margin-left: 20px;" href="/#projects">&#8592; Home</a>
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+    <script src="./js/StockfishWeb.js"></script>
+    <script type="module" src="./js/chess-game.js"></script>
 </body>
-
-<footer>
-    <p>
-        <img
-            src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fvgerman256.github.io%2Fchess.html&label=Players&icon=github&color=%230a58ca&message=&style=social&tz=Europe%2FWarsaw">
-</footer>
-
-<script src="./js/StockfishWeb.js"></script>
-<script type="module" src="./js/chess-game.js"></script>
 
 </html>
