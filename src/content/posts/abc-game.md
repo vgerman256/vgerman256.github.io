@@ -5,6 +5,8 @@ pubDate: 2026-07-01
 draft: false
 tags: ["kids", "learning", "flutter"]
 projectUrl: "/abcgame.html"
+projectLabel: "Play the ABC game"
+icon: abc
 ---
 
 A small alphabet-learning game aimed at young children, built to make first encounters with letters playful rather than a chore.

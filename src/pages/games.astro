@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PostIcon from '../components/PostIcon.astro';
+import type { IconName } from '../lib/icons';
 
-const games = [
+const games: { name: string; blurb: string; href: string; icon: IconName }[] = [
     {
         name: 'Chess',
         blurb: 'Play against Stockfish running in your browser.',
@@ -23,24 +25,7 @@ const games = [
         {games.map((game) => (
             <li>
                 <a class="game-tile" href={game.href}>
-                    <span class="game-icon" aria-hidden="true">
-                        {game.icon === 'chess' ? (
-                            <svg viewBox="0 0 64 64">
-                                <path
-                                    class="glyph-accent"
-                                    d="M21 48 C21 41 24 37 28 33 L18 33 C15 33 13 30 14 27 L23 17 L27 9 L31 14 C41 15 47 25 46 36 L44 48 Z"
-                                />
-                                <rect class="glyph-accent" x="17" y="48" width="30" height="6" rx="2" />
-                                <circle class="glyph-eye" cx="25" cy="22" r="1.8" />
-                            </svg>
-                        ) : (
-                            <svg viewBox="0 0 64 64">
-                                <text class="glyph-text" x="32" y="41" text-anchor="middle">
-                                    <tspan class="glyph-accent">A</tspan>BC
-                                </text>
-                            </svg>
-                        )}
-                    </span>
+                    <PostIcon name={game.icon} class="game-icon" />
                     <span class="game-name">{game.name}</span>
                     <span class="game-blurb">{game.blurb}</span>
                     <span class="game-play">Play →</span>
@@ -90,34 +75,7 @@ const games = [
     }
 
     .game-icon {
-        display: block;
-        width: 96px;
-        height: 96px;
         margin-bottom: 0.75rem;
-        background: var(--code-bg);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-    }
-
-    .game-icon svg {
-        display: block;
-        width: 100%;
-        height: 100%;
-    }
-
-    .glyph-accent {
-        fill: var(--accent);
-    }
-
-    .glyph-eye {
-        fill: var(--code-bg);
-    }
-
-    .glyph-text {
-        fill: var(--text);
-        font-family: var(--font-serif);
-        font-size: 24px;
-        font-weight: 500;
     }
 
     .game-name {

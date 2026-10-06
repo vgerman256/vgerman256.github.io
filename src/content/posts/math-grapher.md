@@ -5,6 +5,8 @@ pubDate: 2026-07-01
 draft: false
 tags: ["math", "pixijs", "webgl"]
 projectUrl: "/math.html"
+projectLabel: "Open the grapher"
+icon: math
 ---
 
 A small graphing tool built on [PixiJS](https://pixijs.com/), for plotting one or more functions of `x` at once.

@@ -32,7 +32,9 @@ collection (`src/content.config.ts`).
     pubDate: 2026-08-29
     draft: false
     tags: ["tag1", "tag2"]
-    projectUrl: "/my-project.html"   # optional — renders a "Launch this project" link
+    projectUrl: "/my-project.html"   # optional — renders a play card at the end of the post
+    projectLabel: "Play it now"      # optional — the card's text, default "Launch this project"
+    icon: chess                      # optional — chess | abc | math | terminal (see src/lib/icons.ts)
     heroImage: "../../assets/screenshots/foo.png"  # optional — relative to the post, shown above the article
     slug: "custom-url-slug"         # optional — overrides the URL, defaults to the filename
     updatedDate: 2026-09-01         # optional — shown if the post is revised later
@@ -60,3 +62,11 @@ layout, intro copy, or how each post entry is rendered (the latter is templated 
 ## Todo
 
 - [ ] Add a free call-booking widget to the Software Services page (Cal.com recommended — free, no forced branding, embeds as iframe). See plan in `.claude/plans/glowing-cooking-bear.md`.
+- [ ] Check whether TypeScript 7 can be used yet. As of Oct 2026 the site is on TypeScript 6, because
+  `@astrojs/check` 0.9.10 only supports TypeScript `^5.0.0 || ^6.0.0`. Run
+  `pnpm view @astrojs/check peerDependencies`; once it lists `^7`, upgrade `typescript` and
+  `@astrojs/check` together and confirm `pnpm build` still passes.
+- [ ] Consider upgrading pnpm from 11 to 12. The version is pinned by `"packageManager": "pnpm@11.9.0"`
+  in `package.json`, which the deploy workflow also uses. To upgrade: install pnpm 12 locally,
+  update that field, run `pnpm install` to refresh `pnpm-lock.yaml`, then check `pnpm build`
+  and the first GitHub Actions deploy.
