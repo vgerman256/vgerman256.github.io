@@ -31,7 +31,8 @@ const { id, area } = Astro.props;
         rotate: 180deg;
     }
 
-    .player-color {
+    /* Nested under .player-strip so it outranks the global `.chess-app .pc` background shorthand. */
+    .player-strip .player-color {
         flex: none;
         width: calc(var(--strip) * 0.75);
         height: calc(var(--strip) * 0.75);

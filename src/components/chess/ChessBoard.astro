@@ -156,7 +156,9 @@
         filter: drop-shadow(0 8px 8px rgb(0 0 0 / 0.35));
     }
 
-    .board:global(.face-to-face) .pieces :global(.piece[data-piece^='b']) {
+    /* Face to face: the pieces of whoever sits at the top (across the table) are drawn upside down. */
+    .board:global(.face-to-face[data-orientation='w']) .pieces :global(.piece[data-piece^='b']),
+    .board:global(.face-to-face[data-orientation='b']) .pieces :global(.piece[data-piece^='w']) {
         rotate: 180deg;
     }
 

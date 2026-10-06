@@ -65,6 +65,7 @@ export class BoardView {
         }
         this.layoutSquares();
         this.setFocusSquare(this.focusSquare, false);
+        root.dataset.orientation = this.orientation;
 
         root.addEventListener('pointerdown', (e) => this.onPointerDown(e));
         root.addEventListener('pointermove', (e) => this.onPointerMove(e));
@@ -81,6 +82,7 @@ export class BoardView {
     setOrientation(color: Color) {
         if (color === this.orientation) return;
         this.orientation = color;
+        this.root.dataset.orientation = color;
         this.layoutSquares();
         for (const [square, el] of this.pieces) this.place(el, square);
     }
