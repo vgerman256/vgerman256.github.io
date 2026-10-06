@@ -39,6 +39,8 @@ export class GameController {
     mode: GameMode = { kind: 'local', orientation: 'face' };
     result: GameResult | null = null;
     thinking = false;
+    // Set when the robot failed to produce a move; the UI then offers retryRobot().
+    robotFailed = false;
     // Bumped whenever the game is replaced or taken back, so a robot reply computed for an older
     // position is dropped instead of being played into the new one.
     private generation = 0;
@@ -47,6 +49,15 @@ export class GameController {
 
     isRobotTurn(): boolean {
         return this.mode.kind === 'robot' && this.game.turn() !== this.mode.humanColor;
+    }
+
+    /** The robot failed to move and is waiting for the user to ask it again. */
+    needsRetry(): boolean {
+        return this.robotFailed && !this.thinking && !this.result && this.isRobotTurn();
+    }
+
+    retryRobot() {
+        if (this.needsRetry()) void this.robotTurnIfNeeded();
     }
 
     /** The color the user may move right now, or null while the robot thinks or the game is over. */
@@ -175,6 +186,7 @@ export class GameController {
         this.mode = mode;
         this.game = game;
         this.result = null;
+        this.robotFailed = false;
         this.setThinking(false);
         if (mode.kind === 'robot') {
             // Also starts the engine early, so its first reply isn't delayed by loading the worker.
@@ -186,18 +198,24 @@ export class GameController {
         if (this.result || !this.isRobotTurn()) return;
 
         const generation = this.generation;
+        this.robotFailed = false;
         this.setThinking(true);
         try {
             const computerMove = await getBestMove(this.game.fen());
             if (generation !== this.generation) return;
+            if (!computerMove) throw new Error('Stockfish returned no move');
 
-            const computerMoveResult = this.game.move(computerMove as string);
+            const computerMoveResult = this.game.move(computerMove);
             this.events.position(computerMoveResult, true);
             this.handleGameState(computerMoveResult);
             this.saveGameState();
         } catch (error) {
-            // Left as before: the game waits on the robot's turn (specs/chess-known-issues.md #2).
+            // The robot's turn stays open; the panel offers Retry (specs/chess-known-issues.md #2).
             console.warn('Robot move failed', error);
+            if (generation === this.generation) {
+                this.robotFailed = true;
+                this.events.notify('The robot could not move. Press Retry.');
+            }
         } finally {
             if (generation === this.generation) this.setThinking(false);
         }

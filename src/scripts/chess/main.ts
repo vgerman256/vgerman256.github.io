@@ -169,6 +169,7 @@ const statusLine = $('status');
 const undoButton = $<HTMLButtonElement>('undo-btn');
 const pgnButton = $<HTMLButtonElement>('pgn-btn');
 const surrenderButton = $<HTMLButtonElement>('surrender-btn');
+const retryButton = $<HTMLButtonElement>('retry-btn');
 
 let flipTimer = 0;
 
@@ -217,6 +218,7 @@ function statusText(): string {
     const result = controller.result;
     if (result) return `${result.reason} · ${result.result}`;
     if (controller.thinking) return 'The robot is thinking…';
+    if (controller.needsRetry()) return 'The robot could not move';
 
     const check = game.isCheck() ? 'Check! ' : '';
     if (controller.mode.kind === 'robot') {
@@ -232,6 +234,7 @@ function updatePanel() {
     fillStrip(stripTop, bottom === 'w' ? 'b' : 'w', moves);
 
     statusLine.textContent = statusText();
+    retryButton.hidden = !controller.needsRetry();
     renderHistory(historyList, moves, prefs.notation, controller.result?.result);
 
     undoButton.disabled = !controller.canUndo();
@@ -240,6 +243,7 @@ function updatePanel() {
 }
 
 $('undo-btn').addEventListener('click', () => controller.undo());
+retryButton.addEventListener('click', () => controller.retryRobot());
 
 $('flip-btn').addEventListener('click', () => {
     board.setOrientation(board.flipped ? 'w' : 'b');

@@ -17,6 +17,7 @@ The old page fired an unawaited warm-up search `getBestMove('e2e4', 1000)` right
 - **Status:** avoided.
   - `src/scripts/chess/engine.ts` queues every engine call, so only one is ever in flight.
   - The warm-up search was dropped.
+  - Since v2.1, every engine call also has a time limit and fails on a worker `error` event. A worker that never answers no longer blocks the queue forever: it is terminated, and the next call starts a new one.
   - `StockfishWeb.send()` itself is unchanged.
 - **Fix idea:** keep one pending request at a time inside `StockfishWeb` itself, or match each reply to the request that caused it.
 
@@ -24,9 +25,9 @@ The old page fired an unawaited warm-up search `getBestMove('e2e4', 1000)` right
 
 The old `doMove` swallowed every error in a `catch`. That includes a `null`/`(none)` `bestmove` and an engine failure. The game then stays on the robot's turn with no message.
 
-- **Status:** open. `GameController.robotTurnIfNeeded()` keeps this behavior and only logs `console.warn`.
-- **Workaround:** the user can still undo, because the thinking indicator stops and Undo stays enabled.
-- **Fix idea:** show a message and offer a retry, or let the user make the move.
+- **Status:** fixed in v2.1.
+  - A failed robot move (engine error, time-out or no move returned) shows "The robot could not move" and a *Retry the robot's move* button (`GameController.needsRetry()` / `retryRobot()`).
+  - Retry works even when the user has no move to undo, for example as Black before the robot's first move.
 
 ## 3. Input accepted while the robot thinks
 

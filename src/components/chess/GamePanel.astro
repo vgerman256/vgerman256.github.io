@@ -5,6 +5,7 @@ import ChessIcon from './ChessIcon.astro';
 
 <aside class="game-panel" aria-label="Game">
     <p class="status" id="status" aria-live="polite"></p>
+    <button type="button" class="btn primary retry" id="retry-btn" hidden>Retry the robot's move</button>
     <div class="history-card">
         <div class="history-head">
             <h2>Moves</h2>
@@ -41,6 +42,10 @@ import ChessIcon from './ChessIcon.astro';
         margin: 0;
         font-weight: 600;
         text-align: center;
+    }
+
+    .retry[hidden] {
+        display: none;
     }
 
     .history-card {
