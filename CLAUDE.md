@@ -9,13 +9,21 @@ Personal blog + project showcase, built with Astro and deployed to GitHub Pages 
 These files live under `public/` and are copied verbatim to the deployed site. **They must never be edited, reformatted, or "improved."** They predate the Astro migration, are fully functional as-is, and are out of scope for any refactor, lint, or style pass:
 
 - `public/math.html`, `public/abcgame.html`, `public/softservices.html`
-- `public/js/**` (`chess.js`, `chess-game.js`, `StockfishWeb.js`, `stockfish.*`)
+- `public/js/**` (`StockfishWeb.js`, `stockfish.*`: the Stockfish engine and its worker wrapper)
 - `public/AbcGame/**` (a separate Flutter-built app, embedded via iframe from `abcgame.html`)
 - `public/css/mainstyle.css` (required by `math.html` and `abcgame.html` — do not delete or rename)
 
 If a change to any of these is ever genuinely needed, treat it as an explicit exception requiring the user's direct sign-off — not routine work. `public/softservices.html` additionally is intentionally **not linked** from the site nav/home; don't add a link to it without being asked.
 
-The chess game is a normal Astro page, `src/pages/chess.astro` (`/chess/`, wide `BaseLayout`). It loads the frozen `public/js/StockfishWeb.js` and `chess-game.js` with `is:inline` script tags. Keep every element ID, inline `onclick` handler and class those scripts rely on. Style anything the scripts create at runtime (toasts, history `<li>`s) with `:global()`. `public/chess.html` is only a redirect to `/chess/` for old links.
+The chess game (`/chess/`, see `specs/chess-overhaul-v2.0.md`) is a full-screen Astro page:
+
+- **Structure:** `src/pages/chess.astro` uses `GameLayout` and the components in `src/components/chess/`.
+- **Scripts:** the TypeScript modules in `src/scripts/chess/`, bundled by Astro.
+- **Rules:** the npm `chess.js` package, pinned to an exact version.
+- **Engine:** the only frozen script it loads is `public/js/StockfishWeb.js` (`is:inline`, typed in `src/scripts/chess/stockfish-web.d.ts`). It is called only through `src/scripts/chess/engine.ts`, which queues requests one at a time.
+- **Runtime styles:** squares, pieces, history entries, toasts and confetti are created by the scripts at runtime, so style them with `:global()`.
+- **Game logic:** `src/scripts/chess/game.ts` is a deliberate port of the old game flow. Known logic bugs are tracked in `specs/chess-known-issues.md` and fixed as separate tasks, not as part of UI work.
+- **Old link:** `public/chess.html` is only a redirect to `/chess/` for old links.
 
 ## Stack
 
@@ -42,18 +50,21 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 │   ├── robots.txt, favicon.svg
 ├── src/
 │   ├── assets/screenshots/     # post images, referenced relatively from .md (optimized by sharp)
+│   ├── assets/chess/pieces/    # SVG piece sets (cburnett, chessnut) + licenses README
 │   ├── content.config.ts       # posts collection + zod schema
 │   ├── content/posts/*.md      # one .md per post
 │   ├── content/about.md        # /about/ page text + profile header frontmatter
 │   ├── components/             # BaseHead, Header, Footer, PostListItem, FormattedDate, PostIcon (shared SVG icons)
-│   ├── layouts/                # BaseLayout (html shell), PostLayout (article view + end-of-post navigation)
+│   ├── components/chess/       # chess page parts: GameMenu, ChessBoard, PlayerStrip, GamePanel, ChessDialogs, ChessIcon
+│   ├── layouts/                # BaseLayout (html shell), PostLayout (article view + end-of-post navigation), GameLayout (full-screen game shell)
 │   ├── pages/                  # index, games, chess, about, 404, rss.xml.js, posts/[...slug].astro
 │   ├── styles/global.css       # design tokens + base typography
 │   ├── lib/icons.ts            # icon names shared by PostIcon and the posts schema
 │   ├── lib/posts.ts            # getSortedPosts(): the one post order used by the home list and newer/older links
-│   └── lib/reading-time.mjs    # remark plugin
+│   ├── lib/reading-time.mjs    # remark plugin
+│   └── scripts/chess/          # chess client code: main (wiring), game (flow), board-view, notation, engine, effects, prefs
 ├── astro.config.mjs, tsconfig.json, package.json, pnpm-lock.yaml
-└── specs/blog-spec-v1.0.md     # original design spec
+└── specs/                      # versioned plans: blog-spec-v1.0.md (original design), chess-overhaul-v2.0.md, chess-known-issues.md
 ```
 
 ## Content authoring — adding a post
@@ -62,6 +73,10 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 2. `draft: true` renders in `astro dev` but is excluded from production builds, RSS, and the sitemap.
 3. Reading time is computed automatically at build time — no frontmatter field needed.
 4. No manifest or index file to update — the home page and RSS feed are generated from the collection automatically.
+
+## Planning
+
+- Before starting any code changes, save every approved implementation plan to `specs/<topic>-vX.Y.md` (e.g. `specs/chess-overhaul-v2.0.md`). Implementation starts only after the plan is in `specs/`.
 
 ## Astro/CSS/TS Conventions
 
