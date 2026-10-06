@@ -96,6 +96,7 @@ function modeFromPrefs(kind: GameMode['kind']): GameMode {
 }
 
 function startGame(mode: GameMode) {
+    clearTimeout(overTimer);
     enterGame();
     void controller.start(mode);
 }
@@ -153,6 +154,7 @@ continueTile.addEventListener('click', () => {
         return;
     }
     const saved = loadSavedGame();
+    clearTimeout(overTimer);
     if (saved && controller.restore(saved)) {
         enterGame();
     } else {
@@ -277,6 +279,7 @@ $('new-btn').addEventListener('click', async () => {
 // ---- Game over -----------------------------------------------------------------------------------
 
 const overDialog = $<HTMLDialogElement>('over-dialog');
+let overTimer = 0;
 
 function onGameOver(result: GameResult) {
     board.refresh();
@@ -296,7 +299,11 @@ function onGameOver(result: GameResult) {
     $('over-icon').dataset.piece = `${result.winner ?? 'w'}K`;
     $('over-icon').classList.toggle('draw', !result.winner);
 
-    setTimeout(() => {
+    // A short pause to see the final move first. Skipped if the user has meanwhile started another game
+    // or left for the menu.
+    clearTimeout(overTimer);
+    overTimer = window.setTimeout(() => {
+        if (controller.result !== result || app.dataset.screen !== 'game') return;
         overDialog.returnValue = '';
         overDialog.showModal();
         if (humanWon) confetti();
@@ -345,10 +352,22 @@ function confirmAction(text: string, yesLabel: string): Promise<boolean> {
     });
 }
 
-// A click on the backdrop (the dialog element itself, outside its content) closes a dialog.
+// A click on the backdrop closes a dialog. Clicks in the dialog's own padding also target the <dialog>
+// element, so check the position instead, and only when the press started outside too (a drag that
+// starts inside the card and ends on the backdrop must not close it).
+function isOutside(dialog: HTMLDialogElement, e: MouseEvent): boolean {
+    const r = dialog.getBoundingClientRect();
+    return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+}
+
 for (const dialog of document.querySelectorAll('dialog')) {
+    let pressedOutside = false;
+    dialog.addEventListener('pointerdown', (e) => {
+        pressedOutside = e.target === dialog && isOutside(dialog, e);
+    });
     dialog.addEventListener('click', (e) => {
-        if (e.target === dialog) dialog.close();
+        if (pressedOutside && e.target === dialog && isOutside(dialog, e)) dialog.close();
+        pressedOutside = false;
     });
 }
 
