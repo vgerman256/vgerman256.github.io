@@ -94,9 +94,10 @@ export class BoardView {
     /**
      * Shows the position of `game`. With `animate`, pieces glide to their new squares, captured pieces
      * fade out and new ones fade in. `move` is the move just played, if any; for a promotion it lets the
-     * pawn slide to the last rank and turn into the new piece there.
+     * pawn slide to the last rank and turn into the new piece there. `lastMove` is the last move of the
+     * game (highlighted), passed in because computing it from `game` replays the whole game.
      */
-    render(game: Chess, { move, animate }: { move?: Move | null; animate: boolean }) {
+    render(game: Chess, { move, lastMove, animate }: { move?: Move | null; lastMove?: Move; animate: boolean }) {
         this.cancelDrag();
         this.root.classList.toggle('no-anim', !animate);
 
@@ -152,7 +153,7 @@ export class BoardView {
             requestAnimationFrame(() => this.root.classList.remove('no-anim'));
         }
 
-        this.lastMove = game.history({ verbose: true }).at(-1);
+        this.lastMove = lastMove;
         this.checkSquare = game.isCheck() ? game.findPiece({ type: 'k', color: game.turn() })[0] ?? null : null;
         this.clearSelection();
         this.refresh();

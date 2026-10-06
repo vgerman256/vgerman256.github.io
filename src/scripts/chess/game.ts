@@ -51,6 +51,11 @@ export class GameController {
     // Bumped whenever the game is replaced or taken back, so a robot reply computed for an older
     // position is dropped instead of being played into the new one.
     private generation = 0;
+    // Bumped on every change to the position. chess.js replays the whole game for each
+    // history({ verbose: true }) call, so history() keeps the result until the next change.
+    private version = 0;
+    private historyVersion = -1;
+    private historyCache: Move[] = [];
 
     constructor(private events: GameEvents) {}
 
@@ -72,8 +77,22 @@ export class GameController {
         return this.result || this.thinking || this.isRobotTurn() ? null : this.game.turn();
     }
 
-    lastMove(): Move | undefined {
-        return this.game.history({ verbose: true }).at(-1);
+    /** The moves played so far (cached; don't modify the array). */
+    history(): Move[] {
+        if (this.historyVersion !== this.version) {
+            this.historyCache = this.game.history({ verbose: true });
+            this.historyVersion = this.version;
+        }
+        return this.historyCache;
+    }
+
+    /** Plies played, counted without replaying the game (every game starts from the initial position). */
+    plyCount(): number {
+        return (this.game.moveNumber() - 1) * 2 + (this.game.turn() === 'b' ? 1 : 0);
+    }
+
+    hasMoves(): boolean {
+        return this.plyCount() > 0;
     }
 
     playerName(color: Color): string {
@@ -83,9 +102,9 @@ export class GameController {
 
     canUndo(): boolean {
         if (this.result || this.thinking) return false;
-        const history = this.game.history({ verbose: true });
+        // Against the robot there must be a move of the user's own: their first is ply 1 as White, ply 2 as Black.
         const mode = this.mode;
-        return mode.kind === 'robot' ? history.some((m) => m.color === mode.humanColor) : history.length > 0;
+        return this.plyCount() >= (mode.kind === 'robot' && mode.humanColor === 'b' ? 2 : 1);
     }
 
     async start(mode: GameMode) {
@@ -122,6 +141,7 @@ export class GameController {
     async doMove(move: Move) {
         try {
             const moveResult = this.game.move(move);
+            this.version++;
             this.events.position(moveResult, true);
 
             const canMove = this.handleGameState(moveResult);
@@ -135,8 +155,6 @@ export class GameController {
     }
 
     undo() {
-        if (this.result || this.thinking) return;
-
         const mode = this.mode;
         if (!this.canUndo()) {
             this.events.notify('Nothing to undo!');
@@ -156,6 +174,7 @@ export class GameController {
             this.game.undo();
         }
 
+        this.version++;
         this.events.position(null, true);
         this.saveGameState();
     }
@@ -190,6 +209,7 @@ export class GameController {
         this.generation++;
         this.mode = mode;
         this.game = game;
+        this.version++;
         this.result = null;
         this.robotFailed = false;
         this.setThinking(false);
@@ -211,6 +231,7 @@ export class GameController {
             if (!computerMove) throw new Error('Stockfish returned no move');
 
             const computerMoveResult = this.game.move(computerMove);
+            this.version++;
             this.events.position(computerMoveResult, true);
             this.handleGameState(computerMoveResult);
             this.saveGameState();

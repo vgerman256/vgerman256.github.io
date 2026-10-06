@@ -60,7 +60,7 @@ $('menu-btn').addEventListener('click', () => {
 });
 
 function hasGameInMemory(): boolean {
-    return !controller.result && controller.game.history().length > 0;
+    return !controller.result && controller.hasMoves();
 }
 
 // ---- Menu ----------------------------------------------------------------------------------------
@@ -184,7 +184,7 @@ function applyModeView() {
 function onPosition(move: Move | null, animate: boolean) {
     clearTimeout(flipTimer);
     if (!animate) applyModeView();
-    board.render(controller.game, { move, animate });
+    board.render(controller.game, { move, animate, lastMove: controller.history().at(-1) });
 
     const mode = controller.mode;
     if (animate && mode.kind === 'local' && mode.orientation === 'flip') {
@@ -225,7 +225,7 @@ function statusText(): string {
 }
 
 function updatePanel() {
-    const moves = controller.game.history({ verbose: true });
+    const moves = controller.history();
     const bottom: Color = board.flipped ? 'b' : 'w';
     fillStrip(stripBottom, bottom, moves);
     fillStrip(stripTop, bottom === 'w' ? 'b' : 'w', moves);

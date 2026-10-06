@@ -108,7 +108,7 @@ The rules (chess.js), the engine (`StockfishWeb.js` and `stockfish.*`) and the g
 
 ## Follow-ups
 
-1. Fix the open issues in [chess-known-issues.md](chess-known-issues.md) as separate tasks, mainly #2 (a failed robot move freezes the game silently) and #4 (undo in 2-player mode takes back two plies). Then turn the list into GitHub issues; `gh` wasn't available.
+1. Fix the open issues in [chess-known-issues.md](chess-known-issues.md) as separate tasks, mainly #4 (undo in 2-player mode takes back two plies). #2 (a failed robot move freezes the game) was fixed in v2.1, along with the other code-review findings; see [chess-review-fixes-v2.1.md](chess-review-fixes-v2.1.md). Then turn the list into GitHub issues; `gh` wasn't available.
 2. Online play by link or QR code, which needs a relay server. The menu tile is already in place, disabled.
 3. Test by hand on real iOS and Android devices, including sound and the safe-area insets.
 4. Optional: in portrait, anchor the game near the bottom of the screen (closer to the thumbs) instead of centering it, if that feels better on a real phone.

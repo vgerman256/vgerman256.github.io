@@ -37,3 +37,15 @@ This plan fixes the 10 findings from the code review of the uncommitted [chess 2
 
 - **8. The full move history is replayed many times per update.** Verbose history is computed once per update and passed to `render()`, `canUndo()` and the panel. A cheap `hasMoves()` replaces `history().length` checks.
 - **10. Dead code and a duplicated check.** `lastMove()` is removed, along with the guard in `undo()` that repeats `canUndo()`.
+
+## Result
+
+All five stages were done on 2026-10-06, each in its own commit after `pnpm build` and a browser check:
+
+- **Stage 1:** a silent Stockfish worker now fails after 20 s; Retry starts a new worker and reapplies the level.
+- **Stage 2:** clicks in a dialog's padding and drags out of the card leave it open; no stale game-over card after New game or Menu.
+- **Stage 3:** New game and Play again repeat the current game's level and color.
+- **Stage 4:** after Flip in "Face to face", the top player's pieces are the upside-down ones; the color circle has its background back.
+- **Stage 5:** the history cache follows every move, undo and reset, including a different line at the same ply count.
+
+The earlier smoke and scenario suites were rerun after the last stage and still pass.
