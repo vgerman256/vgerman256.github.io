@@ -33,7 +33,7 @@ collection (`src/content.config.ts`).
     draft: false
     tags: ["tag1", "tag2"]
     projectUrl: "/my-project.html"   # optional — renders a "Launch this project" link
-    heroImage: "/some-image.png"    # optional
+    heroImage: "../../assets/screenshots/foo.png"  # optional — relative to the post, shown above the article
     slug: "custom-url-slug"         # optional — overrides the URL, defaults to the filename
     updatedDate: 2026-09-01         # optional — shown if the post is revised later
     ---

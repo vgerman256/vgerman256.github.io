@@ -36,7 +36,7 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 ├── .github/workflows/deploy.yml
 ├── public/
 │   ├── math.html, abcgame.html, softservices.html                # frozen, see above
-│   ├── chess.html                                                # redirect to /chess/
+│   ├── chess.html, about.html                                    # redirects to /chess/ and /about/ for old links
 │   ├── css/mainstyle.css                                         # frozen, required by math/abcgame
 │   ├── js/, AbcGame/                                             # frozen
 │   ├── robots.txt, favicon.svg
@@ -56,7 +56,7 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 
 ## Content authoring — adding a post
 
-1. Add `src/content/posts/<slug>.md` with frontmatter: `title`, `description`, `pubDate`, optional `updatedDate`, `draft`, `tags`, `slug` (URL override), `heroImage`, `projectUrl` (link to a live project page, rendered as a "Launch this project" link).
+1. Add `src/content/posts/<slug>.md` with frontmatter: `title`, `description`, `pubDate`, optional `updatedDate`, `draft`, `tags`, `slug` (URL override), `heroImage` (image path relative to the post, e.g. `../../assets/screenshots/foo.png`; shown above the article and used as the social preview image), `projectUrl` (link to a live project page, rendered as a "Launch this project" link).
 2. `draft: true` renders in `astro dev` but is excluded from production builds, RSS, and the sitemap.
 3. Reading time is computed automatically at build time — no frontmatter field needed.
 4. No manifest or index file to update — the home page and RSS feed are generated from the collection automatically.
