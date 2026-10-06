@@ -52,6 +52,10 @@ body {
     padding: 2.4rem 1.5rem;
 }
 
+.wrapper-wide {
+    max-width: 1000px;
+}
+
 a {
     color: inherit;
     text-decoration-color: var(--border);

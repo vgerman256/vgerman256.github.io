@@ -12,8 +12,8 @@ pnpm build         # type-check (astro check) + production build to dist/
 pnpm preview       # serve the dist/ build locally, to test the real production output
 ```
 
-When testing locally, check both the blog (`/`, `/about/`, `/posts/<slug>/`, `/rss.xml`) and the
-frozen static pages under `public/` (`/chess.html`, `/math.html`, `/abcgame.html`, `/AbcGame/`,
+When testing locally, check both the blog (`/`, `/games/`, `/chess/`, `/about/`, `/posts/<slug>/`,
+`/rss.xml`) and the frozen static pages under `public/` (`/math.html`, `/abcgame.html`, `/AbcGame/`,
 `/softservices.html`) — the latter are plain HTML/JS carried over as-is from before the Astro
 migration and must keep working unmodified. See `CLAUDE.md` for the full list and why they're frozen.
 

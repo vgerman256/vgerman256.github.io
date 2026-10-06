@@ -255,7 +255,7 @@ function updateMoveHistory(groupByTwo = true) {
 
 async function initStockfishWeb() {
     if (!stockfishWeb) {
-        stockfishWeb = new StockfishWeb(wasmSupported ? './js/stockfish.wasm.js' : './js/stockfish.js');
+        stockfishWeb = new StockfishWeb(wasmSupported ? '/js/stockfish.wasm.js' : '/js/stockfish.js');
     }
     await stockfishWeb.init();
 
