@@ -45,10 +45,11 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 │   ├── content.config.ts       # posts collection + zod schema
 │   ├── content/posts/*.md      # one .md per post
 │   ├── content/about.md        # /about/ page text + profile header frontmatter
-│   ├── components/             # BaseHead, Header, Footer, PostListItem, FormattedDate
+│   ├── components/             # BaseHead, Header, Footer, PostListItem, FormattedDate, PostIcon (shared SVG icons)
 │   ├── layouts/                # BaseLayout (html shell), PostLayout (article view)
 │   ├── pages/                  # index, games, chess, about, 404, rss.xml.js, posts/[...slug].astro
 │   ├── styles/global.css       # design tokens + base typography
+│   ├── lib/icons.ts            # icon names shared by PostIcon and the posts schema
 │   └── lib/reading-time.mjs    # remark plugin
 ├── astro.config.mjs, tsconfig.json, package.json, pnpm-lock.yaml
 └── specs/blog-spec-v1.0.md     # original design spec
@@ -56,7 +57,7 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 
 ## Content authoring — adding a post
 
-1. Add `src/content/posts/<slug>.md` with frontmatter: `title`, `description`, `pubDate`, optional `updatedDate`, `draft`, `tags`, `slug` (URL override), `heroImage` (image path relative to the post, e.g. `../../assets/screenshots/foo.png`; shown above the article and used as the social preview image), `projectUrl` (link to a live project page, rendered as a "Launch this project" link).
+1. Add `src/content/posts/<slug>.md` with frontmatter: `title`, `description`, `pubDate`, optional `updatedDate`, `draft`, `tags`, `slug` (URL override), `heroImage` (image path relative to the post, e.g. `../../assets/screenshots/foo.png`; shown above the article and used as the social preview image), `projectUrl` (link to a live project page, rendered as a play card at the end of the post), `projectLabel` (the card's text, default "Launch this project"), `icon` (one of the names in `src/lib/icons.ts`, shown in the post list and on the play card; to add a new icon, add its name there and its SVG in `PostIcon.astro`).
 2. `draft: true` renders in `astro dev` but is excluded from production builds, RSS, and the sitemap.
 3. Reading time is computed automatically at build time — no frontmatter field needed.
 4. No manifest or index file to update — the home page and RSS feed are generated from the collection automatically.

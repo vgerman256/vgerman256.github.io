@@ -3,6 +3,8 @@ import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import FormattedDate from '../components/FormattedDate.astro';
+import PostIcon from '../components/PostIcon.astro';
+import type { IconName } from '../lib/icons';
 
 interface Props {
     title: string;
@@ -11,10 +13,22 @@ interface Props {
     updatedDate?: Date;
     minutesRead?: string;
     projectUrl?: string;
+    projectLabel?: string;
+    icon?: IconName;
     heroImage?: ImageMetadata;
 }
 
-const { title, description, pubDate, updatedDate, minutesRead, projectUrl, heroImage } = Astro.props;
+const {
+    title,
+    description,
+    pubDate,
+    updatedDate,
+    minutesRead,
+    projectUrl,
+    projectLabel = 'Launch this project',
+    icon,
+    heroImage,
+} = Astro.props;
 ---
 
 <BaseLayout title={title} description={description} image={heroImage?.src}>
@@ -32,9 +46,10 @@ const { title, description, pubDate, updatedDate, minutesRead, projectUrl, heroI
         <hr />
         <slot />
         {projectUrl && (
-            <p class="launch">
-                <a href={projectUrl}>Launch this project →</a>
-            </p>
+            <a class="project-card" href={projectUrl}>
+                {icon && <PostIcon name={icon} size={56} />}
+                <span class="project-label">{projectLabel} <span class="arrow">→</span></span>
+            </a>
         )}
     </article>
 </BaseLayout>
@@ -99,8 +114,33 @@ const { title, description, pubDate, updatedDate, minutesRead, projectUrl, heroI
         color: var(--muted);
     }
 
-    .launch {
+    /* Play card: a smaller version of the tiles on the Games page. */
+    .project-card {
+        display: inline-flex;
+        align-items: center;
+        gap: 1rem;
         margin-top: 2rem;
-        font-family: var(--font-mono);
+        padding: 0.75rem 1.5rem 0.75rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        text-decoration: none;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .project-card:hover,
+    .project-card:focus-visible {
+        color: inherit;
+        border-color: var(--accent);
+        transform: translateY(-2px);
+    }
+
+    .project-label {
+        font-family: var(--font-serif);
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+
+    .arrow {
+        color: var(--accent);
     }
 </style>

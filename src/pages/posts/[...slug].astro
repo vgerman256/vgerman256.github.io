@@ -21,6 +21,8 @@ const { Content, remarkPluginFrontmatter } = await render(post);
     updatedDate={post.data.updatedDate}
     minutesRead={remarkPluginFrontmatter.minutesRead}
     projectUrl={post.data.projectUrl}
+    projectLabel={post.data.projectLabel}
+    icon={post.data.icon}
     heroImage={post.data.heroImage}
 >
     <Content />

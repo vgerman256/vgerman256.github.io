@@ -4,6 +4,7 @@ description: "A practical primer on spec-first design and efficient day-to-day w
 pubDate: 2026-08-29
 draft: false
 tags: ["ai", "claude-code", "workflow", "specs"]
+icon: terminal
 ---
 
 I've spent the last few months building and rebuilding pet projects — this very site included — with [Claude Code](https://claude.com/claude-code) doing most of the typing. It's changed how I plan work as much as how I write it. This is the primer I wish I'd had on day one: how to think about specs, how to keep an AI coding session productive instead of chaotic, and a few things that differ between web and mobile work.

@@ -32,7 +32,9 @@ collection (`src/content.config.ts`).
     pubDate: 2026-08-29
     draft: false
     tags: ["tag1", "tag2"]
-    projectUrl: "/my-project.html"   # optional — renders a "Launch this project" link
+    projectUrl: "/my-project.html"   # optional — renders a play card at the end of the post
+    projectLabel: "Play it now"      # optional — the card's text, default "Launch this project"
+    icon: chess                      # optional — chess | abc | math | terminal (see src/lib/icons.ts)
     heroImage: "../../assets/screenshots/foo.png"  # optional — relative to the post, shown above the article
     slug: "custom-url-slug"         # optional — overrides the URL, defaults to the filename
     updatedDate: 2026-09-01         # optional — shown if the post is revised later

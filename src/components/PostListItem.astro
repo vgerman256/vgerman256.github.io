@@ -1,5 +1,7 @@
 ---
 import FormattedDate from './FormattedDate.astro';
+import PostIcon from './PostIcon.astro';
+import type { IconName } from '../lib/icons';
 
 interface Props {
     slug: string;
@@ -7,22 +9,29 @@ interface Props {
     description: string;
     pubDate: Date;
     minutesRead?: string;
+    icon?: IconName;
 }
 
-const { slug, title, description, pubDate, minutesRead } = Astro.props;
+const { slug, title, description, pubDate, minutesRead, icon } = Astro.props;
 ---
 
 <li class="post-item">
-    <p class="meta">
-        <FormattedDate date={pubDate} />
-        {minutesRead && <> · {minutesRead}</>}
-    </p>
-    <h2><a href={`/posts/${slug}/`}>{title}</a></h2>
-    <p class="description">{description}</p>
+    {icon && <PostIcon name={icon} size={56} class="item-icon" />}
+    <div>
+        <p class="meta">
+            <FormattedDate date={pubDate} />
+            {minutesRead && <> · {minutesRead}</>}
+        </p>
+        <h2><a href={`/posts/${slug}/`}>{title}</a></h2>
+        <p class="description">{description}</p>
+    </div>
 </li>
 
 <style>
     .post-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1.1rem;
         list-style: none;
         padding: 1.5rem 0;
         border-bottom: 1px solid var(--border);
@@ -30,6 +39,10 @@ const { slug, title, description, pubDate, minutesRead } = Astro.props;
 
     .post-item:first-child {
         padding-top: 0;
+    }
+
+    .item-icon {
+        margin-top: 1.1rem;
     }
 
     .post-item h2 {
