@@ -1,0 +1,368 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+    title="Chess"
+    description="Can you beat a chess robot? Play against Stockfish running in your browser."
+    wide
+>
+    <a class="back-link" href="/games/">&larr; All games</a>
+    <h1 class="page-title">Can you beat a chess robot?</h1>
+    <p class="intro">Play against Stockfish, running entirely in your browser.</p>
+
+    <div id="notification-container"></div>
+
+    <div class="chess-layout">
+        <div class="board-column">
+            <label id="blackCaptured" class="captured-panel panel"></label>
+            <div class="board-frame">
+                <div class="board-stack">
+                    <canvas id="canvas-border" width="640" height="640"></canvas>
+                    <canvas id="canvas-chess" width="600" height="600"></canvas>
+                </div>
+            </div>
+            <label id="whiteCaptured" class="captured-panel panel"></label>
+        </div>
+        <div class="chess-history panel">
+            <h3>History</h3>
+            <ol id="movesHistiry" class="scroll-list" reversed></ol>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <div id="settings-panel" class="panel">
+            <label>Difficulty:
+                <input type="number" id="difficultyInput" min="0" max="20" value="1" /> of 20
+            </label>
+            <label>
+                <input type="checkbox" id="gameType" name="gameType" value="withRobot" checked />
+                Play against the robot
+            </label>
+        </div>
+        <div class="actions">
+            <button type="button" id="newGameButton">Start new game</button>
+            <button disabled type="button" id="undoButton" onclick="undoMove()">Undo</button>
+            <button disabled type="button" id="surrenderButton">Surrender</button>
+        </div>
+        <img
+            src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fvgerman256.github.io%2Fchess.html&label=Players&icon=github&color=%230a58ca&message=&style=social&tz=Europe%2FWarsaw"
+            alt="Players counter"
+            height="20"
+        />
+    </div>
+
+    <dialog id="surrenderDialog">
+        <p>Surrender to the robot? Are you sure?</p>
+        <form method="dialog">
+            <button value="yes">Yes</button>
+            <button value="cancel">Cancel</button>
+        </form>
+    </dialog>
+
+    <div id="promotion-modal" style="display:none;">
+        <div class="modal-box">
+            <h3>Promote to:</h3>
+            <button onclick="selectPromotion('q')">Queen</button>
+            <button onclick="selectPromotion('r')">Rook</button>
+            <button onclick="selectPromotion('b')">Bishop</button>
+            <button onclick="selectPromotion('n')">Knight</button>
+        </div>
+    </div>
+
+    <script is:inline src="/js/StockfishWeb.js"></script>
+    <script is:inline type="module" src="/js/chess-game.js"></script>
+</BaseLayout>
+
+<style>
+    .back-link {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--muted);
+        text-decoration: none;
+    }
+
+    .page-title {
+        margin: 0 0 0.35rem;
+    }
+
+    .intro {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+    }
+
+    /* Board + history */
+    .chess-layout {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    .board-column {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-width: 100%;
+    }
+
+    .board-frame {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .board-stack {
+        position: relative;
+        display: inline-block;
+        /* Light in both themes: chess-game.js draws the coordinates in brown on a transparent canvas. */
+        background: #EFE9DC;
+        border-radius: 6px;
+    }
+
+    #canvas-border {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    #canvas-chess {
+        position: relative;
+        display: block;
+        margin: 20px;
+        border: 2px solid #1A1A18;
+        cursor: pointer;
+    }
+
+    .panel {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+    }
+
+    .captured-panel {
+        display: block;
+        min-height: 2.6rem;
+        padding: 0.2rem 1rem;
+        font-size: 1.5rem;
+        letter-spacing: 3px;
+    }
+
+    .panel-rotated {
+        transform: rotate(180deg);
+    }
+
+    .chess-history {
+        flex: 1 1 220px;
+        padding: 0.75rem 1rem;
+    }
+
+    .chess-history h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.15rem;
+    }
+
+    .scroll-list {
+        max-height: 580px;
+        margin: 0;
+        padding-left: 2.2rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+    }
+
+    .scroll-list :global(li)::marker {
+        color: var(--faint);
+    }
+
+    /* chess-game.js sizes the board to innerWidth - 20, which plus the coordinate gutters is
+       always ~24px wider than the viewport. Bleed the frame to the screen edges (cancelling the
+       .wrapper padding) and hide the right gutter (duplicate rotated rank numbers). */
+    @media (max-width: 700px) {
+        .board-frame {
+            max-width: none;
+            margin: 0 -1.5rem;
+            overflow: hidden;
+        }
+
+        .board-stack {
+            margin-left: -4px;
+            border-radius: 0;
+        }
+    }
+
+    @media (max-width: 680px) {
+        .chess-history {
+            flex-basis: 100%;
+        }
+
+        .scroll-list {
+            max-height: 180px;
+        }
+    }
+
+    /* Controls */
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    #settings-panel {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        align-items: center;
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    #settings-panel label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+    }
+
+    button {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.45rem 0.9rem;
+        cursor: pointer;
+        transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    button:hover:not(:disabled) {
+        color: var(--accent);
+        border-color: var(--accent);
+    }
+
+    button:disabled {
+        color: var(--faint);
+        cursor: not-allowed;
+    }
+
+    input[type="number"] {
+        width: 3.5rem;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.25rem 0.4rem;
+    }
+
+    input[type="checkbox"] {
+        accent-color: var(--accent);
+    }
+
+    input:disabled {
+        color: var(--faint);
+    }
+
+    /* Dialogs */
+    dialog,
+    .modal-box {
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    dialog {
+        padding: 1.25rem 1.5rem;
+    }
+
+    dialog p {
+        margin-top: 0;
+    }
+
+    dialog::backdrop {
+        background: rgba(0, 0, 0, 0.45);
+    }
+
+    dialog form {
+        display: flex;
+        gap: 0.6rem;
+        justify-content: flex-end;
+    }
+
+    #promotion-modal {
+        position: fixed;
+        z-index: 1000;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+    }
+
+    .modal-box {
+        width: 240px;
+        margin: 15% auto;
+        padding: 1.25rem;
+        text-align: center;
+    }
+
+    .modal-box h3 {
+        margin: 0 0 0.75rem;
+    }
+
+    .modal-box button {
+        margin: 0.2rem;
+    }
+
+    /* Toasts: created by chess-game.js, so outside Astro's scoping */
+    #notification-container {
+        position: fixed;
+        top: 10%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        z-index: 9999;
+        pointer-events: none;
+    }
+
+    #notification-container :global(.notification) {
+        background: var(--text);
+        color: var(--bg);
+        font-size: 0.95rem;
+        padding: 0.7rem 1.5rem;
+        border-radius: 6px;
+        min-width: 200px;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+        animation: slide-in 0.4s ease forwards;
+        transition: all 0.5s ease;
+    }
+
+    #notification-container :global(.fade-out) {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    @keyframes slide-in {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>

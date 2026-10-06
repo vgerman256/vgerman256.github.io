@@ -59,9 +59,10 @@ const isWithRobotPlayCheckbox = document.getElementById("gameType")
 
 newGameButton.addEventListener('click', () => {
     const level = difficultyInput.value;
-    setEngineDifficulty(level);
 
+    // initNewGame() creates the Stockfish worker, so the difficulty must be applied after it.
     initNewGame();
+    setEngineDifficulty(level);
 
     drawChess();
     updateMoveHistory();
@@ -254,7 +255,7 @@ function updateMoveHistory(groupByTwo = true) {
 
 async function initStockfishWeb() {
     if (!stockfishWeb) {
-        stockfishWeb = new StockfishWeb(wasmSupported ? './js/stockfish.wasm.js' : './js/stockfish.js');
+        stockfishWeb = new StockfishWeb(wasmSupported ? '/js/stockfish.wasm.js' : '/js/stockfish.js');
     }
     await stockfishWeb.init();
 

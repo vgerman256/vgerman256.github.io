@@ -1,0 +1,56 @@
+---
+const nav = [
+    { href: '/', label: 'Writing' },
+    { href: '/games/', label: 'Games' },
+    { href: '/about/', label: 'About' },
+    { href: '/rss.xml', label: 'RSS' },
+];
+---
+
+<header class="site-header">
+    <a class="wordmark" href="/">Vitaly<span class="accent-mark">.</span>German</a>
+    <nav aria-label="Primary">
+        {nav.map((item) => (
+            <a href={item.href}>{item.label}</a>
+        ))}
+    </nav>
+</header>
+
+<style>
+    .site-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .wordmark {
+        font-family: var(--font-serif);
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+
+    .accent-mark {
+        color: var(--accent);
+    }
+
+    nav {
+        display: flex;
+        gap: 1.25rem;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+    }
+
+    nav a {
+        text-decoration: none;
+        color: var(--muted);
+    }
+
+    nav a:hover {
+        color: var(--accent);
+    }
+</style>

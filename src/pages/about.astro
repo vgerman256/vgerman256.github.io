@@ -1,0 +1,43 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Content, frontmatter } from '../content/about.md';
+---
+
+<BaseLayout title={frontmatter.title} description={frontmatter.description}>
+    <div class="profile-header">
+        <img src={frontmatter.avatar} alt={frontmatter.name} class="profile-avatar" />
+        <div>
+            <h1>{frontmatter.name}</h1>
+            <p class="tagline">{frontmatter.tagline}</p>
+        </div>
+    </div>
+
+    <Content />
+</BaseLayout>
+
+<style>
+    .profile-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-avatar {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+
+    .profile-header h1 {
+        margin: 0 0 0.35rem;
+    }
+
+    .tagline {
+        margin: 0;
+        color: var(--muted);
+    }
+</style>

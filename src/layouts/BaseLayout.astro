@@ -1,0 +1,32 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+    title: string;
+    description: string;
+    image?: string;
+    wide?: boolean;
+    noindex?: boolean;
+}
+
+const { title, description, image, wide = false, noindex = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <BaseHead title={title} description={description} image={image} noindex={noindex} />
+    </head>
+    <body>
+        <a class="skip-link" href="#main">Skip to content</a>
+        <div class:list={['wrapper', { 'wrapper-wide': wide }]}>
+            <Header />
+            <main id="main">
+                <slot />
+            </main>
+            <Footer />
+        </div>
+    </body>
+</html>
