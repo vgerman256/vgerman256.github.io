@@ -2,7 +2,7 @@
 import { Chess, type Color, type Move, type PieceSymbol, type Square } from 'chess.js';
 import { BoardView } from './board-view';
 import { confetti, playSound, setSoundEnabled } from './effects';
-import { GameController, colorName, type GameMode, type GameResult } from './game';
+import { GameController, colorName, modeFromSaved, type GameMode, type GameResult } from './game';
 import { renderCaptured, renderHistory } from './notation';
 import { clampLevel, loadPrefs, loadSavedGame, savePrefs, type Prefs } from './prefs';
 
@@ -133,12 +133,7 @@ function updateContinue() {
             try {
                 const game = new Chess();
                 game.loadPgn(saved.pgn);
-                if (!game.isGameOver()) {
-                    const mode: GameMode = saved.withRobot !== false
-                        ? { kind: 'robot', level: clampLevel(saved.difficulty ?? 1), humanColor: saved.humanColor ?? 'w' }
-                        : { kind: 'local', orientation: saved.orientation ?? 'face' };
-                    summary = `${describeMode(mode)} · move ${game.moveNumber()}`;
-                }
+                if (!game.isGameOver()) summary = `${describeMode(modeFromSaved(saved))} · move ${game.moveNumber()}`;
             } catch {
                 // Unreadable save: no Continue tile; the controller clears it if it is ever restored.
             }
@@ -273,7 +268,8 @@ $('new-btn').addEventListener('click', async () => {
     if (hasGameInMemory() && !await confirmAction('Start a new game? The current game will be lost.', 'New game')) {
         return;
     }
-    startGame(modeFromPrefs(controller.mode.kind));
+    // Same mode, level and color as the current game; the menu is where those are changed.
+    startGame(controller.mode);
 });
 
 // ---- Game over -----------------------------------------------------------------------------------
@@ -311,7 +307,7 @@ function onGameOver(result: GameResult) {
 }
 
 overDialog.addEventListener('close', () => {
-    if (overDialog.returnValue === 'again') startGame(modeFromPrefs(controller.mode.kind));
+    if (overDialog.returnValue === 'again') startGame(controller.mode);
     else if (overDialog.returnValue === 'menu') $('menu-btn').click();
 });
 

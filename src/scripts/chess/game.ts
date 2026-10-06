@@ -32,6 +32,13 @@ const pieceNames: Record<PieceSymbol, string> = {
 };
 
 export const colorName = (color: Color) => (color === 'w' ? 'White' : 'Black');
+
+/** The mode a saved game was played in. Fields missing from older saves get the pre-2.0 defaults. */
+export function modeFromSaved(state: SavedGame): GameMode {
+    return state.withRobot !== false
+        ? { kind: 'robot', level: clampLevel(state.difficulty ?? 1), humanColor: state.humanColor ?? 'w' }
+        : { kind: 'local', orientation: state.orientation ?? 'face' };
+}
 const opponent = (color: Color): Color => (color === 'w' ? 'b' : 'w');
 
 export class GameController {
@@ -100,9 +107,7 @@ export class GameController {
                 return false;
             }
 
-            this.reset(state.withRobot !== false
-                ? { kind: 'robot', level: clampLevel(state.difficulty ?? 1), humanColor: state.humanColor ?? 'w' }
-                : { kind: 'local', orientation: state.orientation ?? 'face' }, game);
+            this.reset(modeFromSaved(state), game);
             this.events.position(null, false);
             this.events.notify('Game restored!');
             void this.robotTurnIfNeeded();
