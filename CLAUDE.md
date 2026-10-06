@@ -46,10 +46,11 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 │   ├── content/posts/*.md      # one .md per post
 │   ├── content/about.md        # /about/ page text + profile header frontmatter
 │   ├── components/             # BaseHead, Header, Footer, PostListItem, FormattedDate, PostIcon (shared SVG icons)
-│   ├── layouts/                # BaseLayout (html shell), PostLayout (article view)
+│   ├── layouts/                # BaseLayout (html shell), PostLayout (article view + end-of-post navigation)
 │   ├── pages/                  # index, games, chess, about, 404, rss.xml.js, posts/[...slug].astro
 │   ├── styles/global.css       # design tokens + base typography
 │   ├── lib/icons.ts            # icon names shared by PostIcon and the posts schema
+│   ├── lib/posts.ts            # getSortedPosts(): the one post order used by the home list and newer/older links
 │   └── lib/reading-time.mjs    # remark plugin
 ├── astro.config.mjs, tsconfig.json, package.json, pnpm-lock.yaml
 └── specs/blog-spec-v1.0.md     # original design spec

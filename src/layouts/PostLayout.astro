@@ -16,6 +16,8 @@ interface Props {
     projectLabel?: string;
     icon?: IconName;
     heroImage?: ImageMetadata;
+    newer?: { title: string; href: string };
+    older?: { title: string; href: string };
 }
 
 const {
@@ -28,6 +30,8 @@ const {
     projectLabel = 'Launch this project',
     icon,
     heroImage,
+    newer,
+    older,
 } = Astro.props;
 ---
 
@@ -52,6 +56,26 @@ const {
             </a>
         )}
     </article>
+
+    <nav class="post-nav" aria-label="More posts">
+        <a class="all-posts" href="/">← All posts</a>
+        {(newer || older) && (
+            <div class="adjacent">
+                {newer && (
+                    <a class="adjacent-link" href={newer.href} rel="prev">
+                        <span class="adjacent-label">← Newer</span>
+                        <span class="adjacent-title">{newer.title}</span>
+                    </a>
+                )}
+                {older && (
+                    <a class="adjacent-link older" href={older.href} rel="next">
+                        <span class="adjacent-label">Older →</span>
+                        <span class="adjacent-title">{older.title}</span>
+                    </a>
+                )}
+            </div>
+        )}
+    </nav>
 </BaseLayout>
 
 <style>
@@ -142,5 +166,74 @@ const {
 
     .arrow {
         color: var(--accent);
+    }
+
+    /* End-of-post navigation: back to the list, plus the neighbouring posts. */
+    .post-nav {
+        margin-top: 2.4rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .all-posts,
+    .adjacent-label {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--muted);
+    }
+
+    .all-posts {
+        text-decoration: none;
+    }
+
+    .adjacent {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.25rem;
+    }
+
+    .adjacent-link {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        text-decoration: none;
+        transition: border-color 0.15s ease;
+    }
+
+    /* The older link always sits in the right column, even when there's no newer one. */
+    .adjacent-link.older {
+        grid-column: 2;
+        text-align: right;
+    }
+
+    .adjacent-link:hover,
+    .adjacent-link:focus-visible {
+        color: inherit;
+        border-color: var(--accent);
+    }
+
+    .adjacent-link:hover .adjacent-label,
+    .all-posts:hover {
+        color: var(--accent);
+    }
+
+    .adjacent-title {
+        font-family: var(--font-serif);
+        font-weight: 500;
+        line-height: 1.3;
+    }
+
+    @media (max-width: 480px) {
+        .adjacent {
+            grid-template-columns: 1fr;
+        }
+
+        .adjacent-link.older {
+            grid-column: 1;
+        }
     }
 </style>

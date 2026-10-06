@@ -1,16 +1,19 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 import PostLayout from '../../layouts/PostLayout.astro';
+import { getSortedPosts, postHref } from '../../lib/posts';
 
 export async function getStaticPaths() {
-    const posts = await getCollection('posts', ({ data }) => import.meta.env.PROD ? !data.draft : true);
-    return posts.map((post) => ({
+    const posts = await getSortedPosts();
+    const link = (post?: (typeof posts)[number]) => post && { title: post.data.title, href: postHref(post) };
+    return posts.map((post, i) => ({
         params: { slug: post.data.slug ?? post.id },
-        props: { post },
+        // The list is newest first, so the previous entry is the newer post.
+        props: { post, newer: link(posts[i - 1]), older: link(posts[i + 1]) },
     }));
 }
 
-const { post } = Astro.props;
+const { post, newer, older } = Astro.props;
 const { Content, remarkPluginFrontmatter } = await render(post);
 ---
 
@@ -24,6 +27,8 @@ const { Content, remarkPluginFrontmatter } = await render(post);
     projectLabel={post.data.projectLabel}
     icon={post.data.icon}
     heroImage={post.data.heroImage}
+    newer={newer}
+    older={older}
 >
     <Content />
 </PostLayout>
