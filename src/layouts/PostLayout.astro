@@ -71,6 +71,14 @@ const { title, description, pubDate, updatedDate, minutesRead, projectUrl } = As
         border-radius: 6px;
     }
 
+    .prose :global(iframe) {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+    }
+
     .description {
         color: var(--muted);
     }

@@ -12,6 +12,17 @@ A small alphabet-learning game aimed at young children, built to make first enco
 - Supports multiple alphabets and languages — English, Russian, Ukrainian, Polish, Spanish, and German assets are all bundled in.
 - Runs as a self-contained app, embedded directly into the site.
 
-[Watch a gameplay demo](https://youtube.com/embed/fSYAs8WwUMw) (Spanish-language example).
+## Gameplay demo
+
+<iframe
+    src="https://www.youtube-nocookie.com/embed/fSYAs8WwUMw"
+    title="ABC Game gameplay, Spanish-language example"
+    loading="lazy"
+    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+></iframe>
+
+A Spanish-language example. [Watch on YouTube](https://youtu.be/fSYAs8WwUMw)
 
 [Play the ABC game →](/abcgame.html)

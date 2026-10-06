@@ -1,32 +1,46 @@
 ---
 title: About
-description: Vitaly German — software engineering developer and lead.
+description: Vitaly German — software engineer and team lead. Desktop, cloud, data and AI-assisted development.
 name: Vitaly German
-tagline: Software developer by profession and by passion for as long as I can remember
+tagline: Software developer by profession, and by passion for as long as I can remember.
 avatar: https://avatars.githubusercontent.com/u/70633746?v=4
 ---
 
-I am a software engineering developer and lead with experience spanning a wide range of fields,
-including desktop applications, cloud technologies, data backup systems, data processing and
-encryption, AI Agentic Coding using Claude Code, computer-aided design and manufacturing, and
-software verification.
+Hi, I'm Vitaly, a software engineer and team lead. I like hard problems that have real impact, and I'm happiest when the result is something people actually use.
 
-I enjoy solving hard problems that have real impact, whether that involves writing code,
-producing high-quality documentation, or delivering results through collaboration with others.
-When working in teams, I naturally identify important areas that are not receiving enough
-attention and focus on those.
+## What I've worked on
 
-I live in Szczecin, Poland with my family. In my spare time, I read about AI, programming, and
-distributed systems, solve random math problems, stay active through fitness and skiing, and
-enjoy the ancient strategy board game of Chess, or watching some nice movie or series.
+Over the years my work has covered a lot of ground:
 
-I obtained my Specialist (MSc equivalent) in Computer Science, from the International Solomon
-University. As part of my doctoral studies, I was involved in an R&D project in the field of
-software verification at V. M. Glushkov Institute of Cybernetics of the National Academy of
-Sciences of Ukraine.
+- **Software verification**: I worked as a developer on [Coverity Prevent](https://scan.coverity.com/), a static analysis tool that finds defects in source code, and did research in the field during my doctoral studies (more under Education)
+- **Desktop applications**
+- **Cloud technologies** and **data backup systems**
+- **Data processing and encryption**
+- **CAD/CAM**: computer-aided design and manufacturing software
+- **AI-assisted development**: these days I build with Claude Code, and I've [written up how I work with it](/posts/ai-coding-with-claude-code/)
 
-Visit my [LinkedIn profile](https://www.linkedin.com/in/vitaly-german-b513231)
-and my [GitHub account](https://github.com/novaua/).
+## How I work
 
-*Image is nothing software is everything
-[(c) the classics](https://www.reddit.com/r/90s/comments/u88foc/image_is_nothing_thirst_is_everything_obey_your/)*
+I'm comfortable writing the code, writing the documentation, or getting a team pulling in the same direction, whatever the problem needs. In a team I tend to spot the important things nobody is looking at yet, and take them on.
+
+## Things I've built for fun
+
+This site is my playground. A few pet projects you can try right here:
+
+- [Chess against a robot](/chess/): the Stockfish engine compiled to WebAssembly, running entirely in your browser
+- [ABC Game](/abcgame.html): an alphabet game for kids in six languages, built with Flutter
+- [Function grapher](/math.html): plot y = f(x) with WebGL
+
+## Education
+
+Specialist degree (MSc equivalent) in Computer Science from the International Solomon University. During my doctoral studies I worked on an R&D project in software verification at the V. M. Glushkov Institute of Cybernetics of the National Academy of Sciences of Ukraine.
+
+## Outside work
+
+I read about AI, programming and distributed systems, solve random math problems, and stay active with fitness and skiing. I'm a big fan of chess, the board game, not just the robot above. And I enjoy a good movie or series in English, which doubles as language practice.
+
+## Let's talk
+
+I'm open to new roles as well as freelance and contract projects. The easiest way to reach me is [LinkedIn](https://www.linkedin.com/in/vitaly-german-b513231), and my code lives on [GitHub](https://github.com/vgerman256).
+
+*Image is nothing, software is everything. [(c) the classics](https://www.reddit.com/r/90s/comments/u88foc/image_is_nothing_thirst_is_everything_obey_your/)*
