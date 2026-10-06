@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactForm from '../components/ContactForm.astro';
 import { Content, frontmatter } from '../content/about.md';
 ---
 
@@ -13,6 +14,12 @@ import { Content, frontmatter } from '../content/about.md';
     </div>
 
     <Content />
+
+    <ContactForm />
+
+    <nav class="page-nav" aria-label="Back">
+        <a class="home-link" href="/">← Home</a>
+    </nav>
 </BaseLayout>
 
 <style>
@@ -39,5 +46,23 @@ import { Content, frontmatter } from '../content/about.md';
     .tagline {
         margin: 0;
         color: var(--muted);
+    }
+
+    /* Matches the "All posts" link at the end of PostLayout. */
+    .page-nav {
+        margin-top: 2.4rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .home-link {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--muted);
+        text-decoration: none;
+    }
+
+    .home-link:hover {
+        color: var(--accent);
     }
 </style>

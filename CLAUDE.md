@@ -54,7 +54,7 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 │   ├── content.config.ts       # posts collection + zod schema
 │   ├── content/posts/*.md      # one .md per post
 │   ├── content/about.md        # /about/ page text + profile header frontmatter
-│   ├── components/             # BaseHead, Header, Footer, PostListItem, FormattedDate, PostIcon (shared SVG icons)
+│   ├── components/             # BaseHead, Header, Footer, PostListItem, FormattedDate, PostIcon (shared SVG icons), ContactForm (Web3Forms, on /about/)
 │   ├── components/chess/       # chess page parts: GameMenu, ChessBoard, PlayerStrip, GamePanel, ChessDialogs, ChessIcon
 │   ├── layouts/                # BaseLayout (html shell), PostLayout (article view + end-of-post navigation), GameLayout (full-screen game shell)
 │   ├── pages/                  # index, games, chess, about, 404, rss.xml.js, posts/[...slug].astro

@@ -41,6 +41,6 @@ I read about AI, programming and distributed systems, solve random math problems
 
 ## Let's talk
 
-I'm open to new roles as well as freelance and contract projects. The easiest way to reach me is [LinkedIn](https://www.linkedin.com/in/vitaly-german-b513231), and my code lives on [GitHub](https://github.com/vgerman256).
+I'm open to new roles as well as freelance and contract projects. The easiest way to reach me is [LinkedIn](https://www.linkedin.com/in/vitaly-german-b513231) or the [message form](#contact-title) at the bottom of this page, and my code lives on [GitHub](https://github.com/vgerman256).
 
 *Image is nothing, software is everything. [(c) the classics](https://www.reddit.com/r/90s/comments/u88foc/image_is_nothing_thirst_is_everything_obey_your/)*
