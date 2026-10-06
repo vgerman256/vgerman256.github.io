@@ -41,6 +41,7 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 │   ├── js/, AbcGame/                                             # frozen
 │   ├── robots.txt, favicon.svg
 ├── src/
+│   ├── assets/screenshots/     # post images, referenced relatively from .md (optimized by sharp)
 │   ├── content.config.ts       # posts collection + zod schema
 │   ├── content/posts/*.md      # one .md per post
 │   ├── content/about.md        # /about/ page text + profile header frontmatter

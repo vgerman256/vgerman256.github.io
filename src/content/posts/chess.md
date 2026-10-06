@@ -1,13 +1,13 @@
 ---
 title: "Can you beat a chess robot?"
-description: "A chess game in two flavours: a native C++/Qt desktop app, and a browser version against Stockfish you can play right on this site."
+description: "A chess game in two flavors: a native C++/Qt desktop app, and a browser version against Stockfish you can play right on this site."
 pubDate: 2026-07-01
 draft: false
 tags: ["chess", "games", "wasm", "cpp", "qt"]
 projectUrl: "/chess/"
 ---
 
-This project comes in two flavours: a native desktop app written in C++ with Qt, and a JavaScript version you can play instantly, right here on the site.
+This project comes in two flavors: a native desktop app written in C++ with Qt, and a JavaScript version you can play instantly, right here on the site.
 
 ## Play it in your browser
 

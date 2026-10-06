@@ -66,8 +66,14 @@ const { title, description, pubDate, updatedDate, minutesRead, projectUrl } = As
         padding: 0;
     }
 
+    /* The max-height keeps tall phone screenshots from filling the screen; wide images hit max-width first. */
     .prose :global(img) {
+        display: block;
         max-width: 100%;
+        max-height: 520px;
+        width: auto;
+        height: auto;
+        border: 1px solid var(--border);
         border-radius: 6px;
     }
 

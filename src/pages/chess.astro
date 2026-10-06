@@ -32,12 +32,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     <div class="button-container">
         <div id="settings-panel" class="panel">
-            <label>Game complexity:
+            <label>Difficulty:
                 <input type="number" id="difficultyInput" min="0" max="20" value="1" /> of 20
             </label>
             <label>
                 <input type="checkbox" id="gameType" name="gameType" value="withRobot" checked />
-                Play with robot
+                Play against the robot
             </label>
         </div>
         <div class="actions">
@@ -53,7 +53,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
 
     <dialog id="surrenderDialog">
-        <p>Surrender to the robot... Are you sure?</p>
+        <p>Surrender to the robot? Are you sure?</p>
         <form method="dialog">
             <button value="yes">Yes</button>
             <button value="cancel">Cancel</button>

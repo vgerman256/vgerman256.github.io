@@ -14,5 +14,3 @@ A small graphing tool built on [PixiJS](https://pixijs.com/), for plotting one o
 - Pan by dragging, zoom with the scroll wheel or a pinch gesture, and the axes and grid adapt to the current scale.
 
 Everything is saved to `localStorage`, so your functions are still there next time you visit.
-
-[Open the grapher →](/math.html)

@@ -25,7 +25,7 @@ A workable spec for a small project answers four questions:
 - **What exists on screen** — the pages or screens, and what's on each one.
 - **What data shapes it** — for a blog, that's frontmatter fields like `title`, `pubDate`, `tags`; for an app, it's your core models.
 - **What's explicitly not included** — scope creep is the main way AI coding sessions go sideways, because an agent will happily build the feature you didn't ask for if the boundary isn't stated.
-- **What must never change** — this site's `CLAUDE.md` calls out a handful of frozen legacy pages that predate the Astro rewrite and are off-limits for "improvement." Naming these explicitly avoids an agent well-meaningly refactoring code you deliberately left alone.
+- **What must never change** — this site's `CLAUDE.md` calls out a handful of frozen legacy pages that predate the Astro rewrite and are off-limits for "improvement." Naming these explicitly stops a well-meaning agent from refactoring code you deliberately left alone.
 
 That last point generalizes: a project-level instructions file (`CLAUDE.md`, or equivalent) that states your stack, conventions, and hard boundaries is worth writing once and reusing across every session. It's the difference between re-explaining "we use pnpm, not npm" every conversation and never having to say it again.
 
@@ -58,7 +58,7 @@ A few habits make the difference between a session that ships and one that meand
 
 ## Web development specifics
 
-For a static or server-rendered site like this one, the fast feedback loop is the browser itself: run the dev server, make the change, look at the page. Claude Code can drive a real browser to check its own frontend work, which matters more for CSS and layout than for backend logic, where a passing type-check tells you far less than seeing the rendered page.
+For a static or server-rendered site like this one, the fast feedback loop is the browser itself: run the dev server, make the change, look at the page. Claude Code can drive a real browser to check its own frontend work, which matters most for CSS and layout, where a passing type-check tells you far less than seeing the rendered page.
 
 A few things worth stating up front in a web project's spec or instructions file:
 
@@ -73,7 +73,7 @@ Mobile work changes two things: you can't always "just look at it" as cheaply, a
 - **Simulators over guessing.** If your toolchain supports it, have the agent build and boot a simulator/emulator to check a UI change rather than reasoning about layout from code alone — mobile layout bugs (safe areas, keyboard overlap, orientation) are exactly the kind of thing that look fine in the diff and wrong on device.
 - **State platform constraints explicitly.** Minimum OS version, target devices, offline behavior, permission prompts — these belong in the spec because they silently constrain implementation choices (which API is even available) in a way a web project rarely has to think about.
 - **Treat native modules and permissions as a boundary.** Adding a new permission (camera, location, push notifications) has user-facing and store-review consequences beyond the code — reserve those decisions for yourself, and have the agent flag it rather than add it quietly to satisfy a feature request.
-- **Cross-platform framework choice matters more upfront.** Unlike a website, an app's framework decision (native, React Native, Flutter, etc.) is expensive to change later — this is the one decision worth a short written spec of its own before any code exists, since it shapes every subsequent session.
+- **Cross-platform framework choice matters more up front.** Unlike a website, an app's framework decision (native, React Native, Flutter, etc.) is expensive to change later — this is the one decision worth a short written spec of its own before any code exists, since it shapes every subsequent session.
 
 ## A minimal starter workflow
 
