@@ -33,3 +33,18 @@ The project started life as a native Qt chess UI written in C++, before being po
 ></iframe>
 
 Gameplay demo of the desktop app. [Watch on YouTube](https://www.youtube.com/watch?v=hlW6xv23fN4)
+
+## Where it all started
+
+For comparison, here's an early video of one of the first working versions of the desktop app:
+
+<iframe
+    src="https://www.youtube-nocookie.com/embed/pBiuGpj8seQ"
+    title="Chess++ program gameplay, an early version of the desktop app"
+    loading="lazy"
+    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+></iframe>
+
+"Chess++ program gameplay", the early version. [Watch on YouTube](https://www.youtube.com/watch?v=pBiuGpj8seQ)
