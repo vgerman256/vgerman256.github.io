@@ -1,0 +1,62 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+
+interface Props {
+    title: string;
+    description: string;
+    image?: string;
+}
+
+const { title, description, image } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <BaseHead title={title} description={description} image={image} />
+    </head>
+    <body class="game-body">
+        <slot />
+    </body>
+</html>
+
+<style is:global>
+    /* Game palette: a warm "table" look of its own, separate from the blog tokens in global.css. */
+    :root {
+        --g-bg: #F2ECE1;
+        --g-surface: #FFFDF8;
+        --g-surface-2: #E9E1D2;
+        --g-text: #2A241C;
+        --g-muted: #74695A;
+        --g-border: #DDD2BF;
+        --g-accent: #D85A30;
+        --g-accent-text: #FFFFFF;
+        --g-shadow: 0 10px 30px rgba(60, 40, 10, 0.18);
+        --g-radius: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --g-bg: #14120E;
+            --g-surface: #211E18;
+            --g-surface-2: #2C2820;
+            --g-text: #EEE8DC;
+            --g-muted: #A79E8E;
+            --g-border: #3A342A;
+            --g-accent: #E2724A;
+            --g-accent-text: #1A140E;
+            --g-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+    }
+
+    .game-body {
+        min-height: 100dvh;
+        background:
+            radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--g-accent) 10%, transparent), transparent 60%),
+            var(--g-bg);
+        color: var(--g-text);
+        font-size: 16px;
+        line-height: 1.5;
+        -webkit-tap-highlight-color: transparent;
+    }
+</style>

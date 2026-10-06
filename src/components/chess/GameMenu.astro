@@ -1,0 +1,286 @@
+---
+import ChessIcon from './ChessIcon.astro';
+
+const heroPieces = ['wR', 'bN', 'wB', 'bQ', 'wK', 'bB', 'wN', 'bR'];
+---
+
+<section class="menu-screen" aria-labelledby="menu-title">
+    <div class="hero">
+        <div class="hero-pieces" aria-hidden="true">
+            {heroPieces.map((piece, i) => <span class="pc" data-piece={piece} style={`--i: ${i}`} />)}
+        </div>
+        <h1 id="menu-title">Can you beat a chess robot?</h1>
+        <p>Play Stockfish running entirely in your browser, or a friend on the same device.</p>
+    </div>
+
+    <button type="button" class="continue" id="continue-tile" hidden>
+        <ChessIcon name="play" />
+        <span class="continue-text">
+            <strong>Continue game</strong>
+            <span id="continue-summary"></span>
+        </span>
+    </button>
+
+    <div class="tiles">
+        <article class="tile tile-robot">
+            <header>
+                <span class="pc tile-icon" data-piece="bQ" aria-hidden="true"></span>
+                <h2>Play vs Robot</h2>
+            </header>
+            <label class="field" for="level-input">
+                <span class="field-label">
+                    Level <output id="level-output" for="level-input">3</output> of 20
+                    · <span id="level-band" class="band">Beginner</span>
+                </span>
+                <input type="range" id="level-input" min="0" max="20" step="1" value="3" />
+            </label>
+            <fieldset class="segmented">
+                <legend>Play as</legend>
+                <label><input type="radio" name="color" value="w" checked /><span class="pc" data-piece="wK"></span>White</label>
+                <label><input type="radio" name="color" value="random" /><span class="random-icon" aria-hidden="true">?</span>Random</label>
+                <label><input type="radio" name="color" value="b" /><span class="pc" data-piece="bK"></span>Black</label>
+            </fieldset>
+            <button type="button" class="btn primary" id="start-robot">Start game</button>
+        </article>
+
+        <article class="tile">
+            <header>
+                <span class="tile-icon pair" aria-hidden="true">
+                    <span class="pc" data-piece="wN"></span><span class="pc" data-piece="bN"></span>
+                </span>
+                <h2>2 Players</h2>
+            </header>
+            <p class="tile-text">Take turns on this device. Put it flat between you, or pass it back and forth.</p>
+            <fieldset class="segmented">
+                <legend>Board</legend>
+                <label><input type="radio" name="menu-orientation" value="face" checked />Face to face</label>
+                <label><input type="radio" name="menu-orientation" value="flip" />Flip each move</label>
+            </fieldset>
+            <button type="button" class="btn primary" id="start-local">Start game</button>
+        </article>
+
+        <article class="tile tile-online" aria-disabled="true">
+            <header>
+                <span class="pc tile-icon" data-piece="wP" aria-hidden="true"></span>
+                <h2>Play a friend online</h2>
+                <span class="badge">Coming soon</span>
+            </header>
+            <p class="tile-text">Send a link or a QR code and play from two devices.</p>
+            <button type="button" class="btn" disabled>Send an invite</button>
+        </article>
+    </div>
+
+    <img
+        class="counter"
+        src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fvgerman256.github.io%2Fchess.html&label=Players&icon=github&color=%230a58ca&message=&style=social&tz=Europe%2FWarsaw"
+        alt="Players counter"
+        height="20"
+    />
+</section>
+
+<style>
+    .menu-screen {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        width: min(100%, 66rem);
+        margin: 0 auto;
+        padding: 0.5rem 1rem 2rem;
+    }
+
+    .hero {
+        text-align: center;
+        padding-top: 0.5rem;
+    }
+
+    .hero-pieces {
+        display: flex;
+        justify-content: center;
+        gap: 0.15rem;
+    }
+
+    .hero-pieces .pc {
+        width: clamp(2.2rem, 9vw, 3.75rem);
+        aspect-ratio: 1;
+        animation: bob 3.2s ease-in-out calc(var(--i) * -0.4s) infinite;
+    }
+
+    @keyframes bob {
+        50% {
+            translate: 0 -0.35rem;
+        }
+    }
+
+    h1 {
+        margin: 0.6rem 0 0.25rem;
+        font-family: var(--font-serif);
+        font-size: clamp(1.75rem, 5.5vw, 2.75rem);
+        font-weight: 600;
+        line-height: 1.15;
+    }
+
+    .hero p {
+        margin: 0;
+        color: var(--g-muted);
+    }
+
+    .continue {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        width: min(100%, 34rem);
+        margin: 0 auto;
+        padding: 0.8rem 1.2rem;
+        border: 0;
+        border-radius: var(--g-radius);
+        background: var(--g-accent);
+        color: var(--g-accent-text);
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        box-shadow: var(--g-shadow);
+        transition: translate 0.15s ease;
+    }
+
+    .continue:hover {
+        translate: 0 -2px;
+    }
+
+    .continue[hidden] {
+        display: none;
+    }
+
+    .continue-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.3;
+    }
+
+    .continue-text span {
+        font-size: 0.85rem;
+        opacity: 0.85;
+    }
+
+    .tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+        gap: 1rem;
+    }
+
+    .tile {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1.25rem;
+        border: 1px solid var(--g-border);
+        border-radius: var(--g-radius);
+        background: var(--g-surface);
+        box-shadow: var(--g-shadow);
+    }
+
+    .tile-robot {
+        border-top: 4px solid var(--g-accent);
+    }
+
+    .tile header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .tile h2 {
+        margin: 0;
+        font-family: var(--font-serif);
+        font-size: 1.35rem;
+        font-weight: 600;
+    }
+
+    .tile-icon {
+        width: 2.4rem;
+        height: 2.4rem;
+        flex: none;
+    }
+
+    .tile-icon.pair {
+        display: flex;
+        width: auto;
+    }
+
+    .tile-icon.pair .pc {
+        width: 2.4rem;
+        height: 2.4rem;
+    }
+
+    .tile-icon.pair .pc + .pc {
+        margin-left: -0.9rem;
+    }
+
+    .tile-text {
+        flex: 1;
+        margin: 0;
+        color: var(--g-muted);
+        font-size: 0.95rem;
+    }
+
+    .tile .btn {
+        margin-top: auto;
+    }
+
+    .tile-online {
+        opacity: 0.7;
+    }
+
+    .badge {
+        margin-left: auto;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        background: var(--g-surface-2);
+        color: var(--g-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .field-label {
+        font-size: 0.95rem;
+    }
+
+    .field-label output {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .band {
+        color: var(--g-accent);
+        font-weight: 600;
+    }
+
+    input[type='range'] {
+        width: 100%;
+        accent-color: var(--g-accent);
+    }
+
+    .random-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 1.4rem;
+        height: 1.4rem;
+        border: 1px solid #555;
+        border-radius: 50%;
+        background: linear-gradient(90deg, #FFF 50%, #222 50%);
+        color: #D85A30;
+        font-weight: 800;
+        font-size: 0.85rem;
+    }
+
+    .counter {
+        align-self: center;
+        margin-top: 0.5rem;
+    }
+</style>

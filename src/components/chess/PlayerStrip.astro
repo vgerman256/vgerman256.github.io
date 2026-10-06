@@ -1,0 +1,115 @@
+---
+// One player's row above or below the board: color, name, "thinking" dots, captured pieces and material.
+interface Props {
+    id: string;
+    area: 'top' | 'bottom';
+}
+
+const { id, area } = Astro.props;
+---
+
+<div class="player-strip" id={id} style={`grid-area: ${area}`}>
+    <span class="pc player-color" aria-hidden="true"></span>
+    <span class="player-name"></span>
+    <span class="thinking" hidden aria-hidden="true"><span></span><span></span><span></span></span>
+    <span class="captured"></span>
+</div>
+
+<style>
+    .player-strip {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: var(--board-size);
+        height: var(--strip);
+        padding: 0 0.35rem;
+        font-size: 0.95rem;
+        transition: rotate 0.3s ease;
+    }
+
+    .player-strip:global(.rotated) {
+        rotate: 180deg;
+    }
+
+    .player-color {
+        flex: none;
+        width: calc(var(--strip) * 0.75);
+        height: calc(var(--strip) * 0.75);
+        border-radius: 50%;
+        background-color: var(--g-surface-2);
+        background-size: 85%;
+        box-shadow: 0 0 0 2px transparent;
+        transition: box-shadow 0.2s ease;
+    }
+
+    .player-strip:global(.to-move) .player-color {
+        box-shadow: 0 0 0 2px var(--g-accent);
+    }
+
+    .player-name {
+        overflow: hidden;
+        font-weight: 600;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .thinking {
+        display: inline-flex;
+        gap: 3px;
+    }
+
+    .thinking[hidden] {
+        display: none;
+    }
+
+    .thinking span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--g-accent);
+        animation: dot 1s ease-in-out infinite;
+    }
+
+    .thinking span:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+    .thinking span:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    @keyframes dot {
+        0%, 80%, 100% {
+            opacity: 0.25;
+            scale: 0.8;
+        }
+
+        40% {
+            opacity: 1;
+            scale: 1;
+        }
+    }
+
+    .captured {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        margin-left: auto;
+        overflow: hidden;
+    }
+
+    .captured :global(.fig) {
+        flex: none;
+        width: calc(var(--strip) * 0.55);
+        height: calc(var(--strip) * 0.55);
+        margin-left: calc(var(--strip) * -0.18);
+    }
+
+    .captured :global(.adv) {
+        margin-left: 0.35rem;
+        color: var(--g-muted);
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+</style>

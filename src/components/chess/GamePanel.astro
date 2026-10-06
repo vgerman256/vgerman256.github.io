@@ -1,0 +1,243 @@
+---
+// Status line, move history and the action buttons. Beside the board in landscape, below it in portrait.
+import ChessIcon from './ChessIcon.astro';
+---
+
+<aside class="game-panel" aria-label="Game">
+    <p class="status" id="status" aria-live="polite"></p>
+    <div class="history-card">
+        <div class="history-head">
+            <h2>Moves</h2>
+            <select id="notation-select" aria-label="Move notation">
+                <option value="figurine">Figurine (♘f3)</option>
+                <option value="san">Algebraic (Nf3)</option>
+                <option value="coords">Coordinates (g1–f3)</option>
+            </select>
+        </div>
+        <ol class="history" id="history"></ol>
+    </div>
+    <div class="actions">
+        <button type="button" class="act" id="undo-btn"><ChessIcon name="undo" /><span>Undo</span></button>
+        <button type="button" class="act" id="flip-btn"><ChessIcon name="flip" /><span>Flip</span></button>
+        <button type="button" class="act" id="pgn-btn"><ChessIcon name="copy" /><span>Copy PGN</span></button>
+        <button type="button" class="act" id="surrender-btn"><ChessIcon name="flag" /><span>Surrender</span></button>
+        <button type="button" class="act" id="new-btn"><ChessIcon name="plus" /><span>New game</span></button>
+    </div>
+</aside>
+
+<style>
+    .game-panel {
+        grid-area: panel;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: var(--board-size);
+        min-height: 0;
+        padding: 0 0.35rem;
+    }
+
+    .status {
+        min-height: 1.5em;
+        margin: 0;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .history-card {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 0;
+        padding: 0.25rem 0.5rem;
+        border: 1px solid var(--g-border);
+        border-radius: 10px;
+        background: var(--g-surface);
+    }
+
+    .history-head {
+        display: contents;
+    }
+
+    .history-head h2 {
+        display: none;
+        margin: 0;
+        font-family: var(--font-serif);
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    select {
+        order: 2;
+        max-width: 7.5rem;
+        padding: 0.25rem;
+        border: 1px solid var(--g-border);
+        border-radius: 6px;
+        background: var(--g-surface-2);
+        color: var(--g-text);
+        font: inherit;
+        font-size: 0.8rem;
+    }
+
+    /* Portrait: one scrolling row of moves. */
+    .history {
+        display: flex;
+        flex: 1;
+        gap: 0.2rem 0.75rem;
+        min-width: 0;
+        min-height: 2.25rem;
+        margin: 0;
+        padding: 0;
+        overflow-x: auto;
+        list-style: none;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        white-space: nowrap;
+        scrollbar-width: thin;
+    }
+
+    .history :global(li) {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .history :global(.num) {
+        color: var(--g-muted);
+    }
+
+    .history :global(.ply) {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.05rem 0.3rem;
+        border-radius: 5px;
+    }
+
+    .history :global(.ply.current) {
+        background: color-mix(in srgb, var(--g-accent) 22%, transparent);
+        font-weight: 700;
+    }
+
+    .history :global(.fig) {
+        width: 1.25em;
+        height: 1.25em;
+    }
+
+    .history :global(.result) {
+        font-weight: 700;
+    }
+
+    .actions {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.35rem;
+    }
+
+    .act {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.15rem;
+        min-height: 3.1rem;
+        padding: 0.4rem 0.2rem;
+        border: 1px solid var(--g-border);
+        border-radius: 10px;
+        background: var(--g-surface);
+        color: var(--g-text);
+        font: 500 0.72rem / 1.1 var(--font-sans);
+        cursor: pointer;
+        transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }
+
+    .act:hover:not(:disabled) {
+        border-color: var(--g-accent);
+        color: var(--g-accent);
+    }
+
+    .act:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .act:focus-visible {
+        outline: 2px solid var(--g-accent);
+        outline-offset: 2px;
+    }
+
+    /* Landscape: a side column with a full-height, three-column move list. */
+    @media (orientation: landscape) and (min-width: 34rem) {
+        .game-panel {
+            width: auto;
+            height: calc(var(--board-size) + 2 * var(--strip));
+            padding: 0;
+        }
+
+        .status {
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            background: var(--g-surface-2);
+        }
+
+        .history-card {
+            flex: 1;
+            flex-direction: column;
+            align-items: stretch;
+            padding: 0.75rem;
+        }
+
+        .history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .history-head h2 {
+            display: block;
+        }
+
+        .history {
+            display: grid;
+            grid-template-columns: 2.25rem 1fr 1fr;
+            align-content: start;
+            gap: 0.15rem 0.25rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .history :global(li) {
+            display: contents;
+        }
+
+        .history :global(.result) {
+            display: block;
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+
+        .actions {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .act {
+            flex-direction: row;
+            justify-content: flex-start;
+            gap: 0.5rem;
+            min-height: 2.6rem;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .act:last-child {
+            grid-column: 1 / -1;
+            justify-content: center;
+            border-color: var(--g-accent);
+            background: var(--g-accent);
+            color: var(--g-accent-text);
+        }
+
+        .act:last-child:hover {
+            color: var(--g-accent-text);
+            filter: brightness(1.08);
+        }
+    }
+</style>

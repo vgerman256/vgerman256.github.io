@@ -1,0 +1,258 @@
+---
+// Native <dialog>s for the chess game. main.ts fills and opens them; each form uses method="dialog",
+// so the clicked button's value becomes the dialog's returnValue.
+const boards = [
+    { value: 'wood', label: 'Wood' },
+    { value: 'green', label: 'Green' },
+    { value: 'blue', label: 'Blue' },
+    { value: 'slate', label: 'Slate' },
+];
+const pieceSets = [
+    { value: 'cburnett', label: 'Classic' },
+    { value: 'chessnut', label: 'Chessnut' },
+];
+---
+
+<dialog id="promotion-dialog" class="promotion" aria-label="Promote the pawn to">
+    <form method="dialog">
+        <button value="q" aria-label="Queen"><span class="pc"></span></button>
+        <button value="n" aria-label="Knight"><span class="pc"></span></button>
+        <button value="r" aria-label="Rook"><span class="pc"></span></button>
+        <button value="b" aria-label="Bishop"><span class="pc"></span></button>
+    </form>
+</dialog>
+
+<dialog id="confirm-dialog" class="card">
+    <form method="dialog">
+        <p id="confirm-text"></p>
+        <div class="buttons">
+            <button class="btn" value="cancel">Cancel</button>
+            <button class="btn primary" value="yes" id="confirm-yes">Yes</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="over-dialog" class="card over">
+    <form method="dialog">
+        <span class="pc over-icon" id="over-icon" aria-hidden="true"></span>
+        <h2 id="over-title"></h2>
+        <p id="over-reason"></p>
+        <p class="score" id="over-score"></p>
+        <div class="buttons">
+            <button class="btn" value="review">View board</button>
+            <button class="btn" value="menu">Menu</button>
+            <button class="btn primary" value="again" autofocus>Play again</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="settings-dialog" class="card settings" aria-labelledby="settings-title">
+    <form method="dialog">
+        <h2 id="settings-title">Settings</h2>
+
+        <fieldset class="segmented">
+            <legend>Board</legend>
+            {boards.map(({ value, label }) => (
+                <label>
+                    <input type="radio" name="board" value={value} />
+                    <span class="swatch" data-board={value} aria-hidden="true"></span>
+                    {label}
+                </label>
+            ))}
+        </fieldset>
+
+        <fieldset class="segmented">
+            <legend>Pieces</legend>
+            {pieceSets.map(({ value, label }) => (
+                <label>
+                    <input type="radio" name="pieces" value={value} />
+                    <span class="pc" data-pieces={value} data-piece="wN" aria-hidden="true"></span>
+                    <span class="pc" data-pieces={value} data-piece="bQ" aria-hidden="true"></span>
+                    {label}
+                </label>
+            ))}
+        </fieldset>
+
+        <fieldset class="segmented">
+            <legend>Move notation</legend>
+            <label><input type="radio" name="notation" value="figurine" />♘f3</label>
+            <label><input type="radio" name="notation" value="san" />Nf3</label>
+            <label><input type="radio" name="notation" value="coords" />g1–f3</label>
+        </fieldset>
+
+        <fieldset class="segmented">
+            <legend>2-player board</legend>
+            <label><input type="radio" name="orientation" value="face" />Face to face</label>
+            <label><input type="radio" name="orientation" value="flip" />Flip each move</label>
+        </fieldset>
+
+        <label class="switch">
+            <input type="checkbox" name="sound" />
+            <span>Sound effects</span>
+        </label>
+
+        <div class="buttons">
+            <button class="btn primary" value="close">Done</button>
+        </div>
+    </form>
+</dialog>
+
+<style>
+    .card {
+        width: min(26rem, calc(100vw - 2rem));
+        padding: 1.4rem 1.5rem;
+        border: 1px solid var(--g-border);
+        border-radius: var(--g-radius);
+        background: var(--g-surface);
+        color: var(--g-text);
+        box-shadow: var(--g-shadow);
+    }
+
+    dialog[open] {
+        animation: dialog-in 0.2s ease both;
+    }
+
+    @keyframes dialog-in {
+        from {
+            opacity: 0;
+            scale: 0.94;
+        }
+    }
+
+    dialog::backdrop {
+        background: rgb(10 8 5 / 0.5);
+        backdrop-filter: blur(2px);
+    }
+
+    .card h2 {
+        margin: 0 0 0.5rem;
+        font-family: var(--font-serif);
+        font-size: 1.6rem;
+        font-weight: 600;
+    }
+
+    .card p {
+        margin: 0 0 1rem;
+    }
+
+    .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .over {
+        text-align: center;
+    }
+
+    .over .buttons {
+        justify-content: center;
+    }
+
+    .over-icon {
+        display: block;
+        width: 4.5rem;
+        height: 4.5rem;
+        margin: 0 auto 0.25rem;
+    }
+
+    .over-icon:global(.draw) {
+        background-image: var(--wK), var(--bK);
+        background-position: 0 50%, 100% 50%;
+        background-size: 60%;
+        width: 6rem;
+    }
+
+    .over p {
+        margin: 0;
+        color: var(--g-muted);
+    }
+
+    .over .score {
+        margin: 0.25rem 0 1.25rem;
+        color: var(--g-text);
+        font-family: var(--font-mono);
+        font-size: 1.4rem;
+        font-weight: 700;
+    }
+
+    .settings form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .swatch {
+        width: 1.4rem;
+        height: 1.4rem;
+        border-radius: 4px;
+        background: conic-gradient(var(--sq-dark) 25%, var(--sq-light) 0 50%, var(--sq-dark) 0 75%, var(--sq-light) 0);
+        box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+    }
+
+    .settings .pc {
+        width: 1.6rem;
+        height: 1.6rem;
+    }
+
+    .settings .pc + .pc {
+        margin-left: -0.5rem;
+    }
+
+    .switch {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        cursor: pointer;
+    }
+
+    .switch input {
+        width: 1.15rem;
+        height: 1.15rem;
+        accent-color: var(--g-accent);
+    }
+
+    /* The promotion picker: a column of four squares docked over the promotion square. */
+    .promotion {
+        position: fixed;
+        inset: auto;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--g-surface);
+        box-shadow: var(--g-shadow), 0 0 0 2px var(--g-accent);
+    }
+
+    .promotion form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .promotion:global(.from-bottom) form {
+        flex-direction: column-reverse;
+    }
+
+    .promotion button {
+        width: var(--sq);
+        height: var(--sq);
+        padding: 6%;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .promotion button:hover,
+    .promotion button:focus-visible {
+        outline: none;
+        background: color-mix(in srgb, var(--g-accent) 25%, transparent);
+    }
+
+    .promotion .pc {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+</style>

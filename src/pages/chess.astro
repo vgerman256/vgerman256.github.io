@@ -1,368 +1,467 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import GameLayout from '../layouts/GameLayout.astro';
+import ChessBoard from '../components/chess/ChessBoard.astro';
+import ChessDialogs from '../components/chess/ChessDialogs.astro';
+import ChessIcon from '../components/chess/ChessIcon.astro';
+import GameMenu from '../components/chess/GameMenu.astro';
+import GamePanel from '../components/chess/GamePanel.astro';
+import PlayerStrip from '../components/chess/PlayerStrip.astro';
 ---
 
-<BaseLayout
+<GameLayout
     title="Chess"
-    description="Can you beat a chess robot? Play against Stockfish running in your browser."
-    wide
+    description="Can you beat a chess robot? Play Stockfish running in your browser, or a friend on the same device."
 >
-    <a class="back-link" href="/games/">&larr; All games</a>
-    <h1 class="page-title">Can you beat a chess robot?</h1>
-    <p class="intro">Play against Stockfish, running entirely in your browser.</p>
+    <div class="chess-app" id="chess-app" data-screen="menu" data-board="wood" data-pieces="cburnett">
+        <header class="top-bar">
+            <a class="icon-btn back" href="/games/"><ChessIcon name="back" /><span>Games</span></a>
+            <span class="brand">Chess</span>
+            <button type="button" class="icon-btn" id="sound-btn" aria-label="Sound effects" aria-pressed="false">
+                <ChessIcon name="sound-on" class="when-on" />
+                <ChessIcon name="sound-off" class="when-off" />
+            </button>
+            <button type="button" class="icon-btn" id="settings-btn" aria-label="Settings">
+                <ChessIcon name="settings" />
+            </button>
+            <button type="button" class="icon-btn game-only" id="menu-btn" aria-label="Main menu">
+                <ChessIcon name="menu" />
+            </button>
+        </header>
 
-    <div id="notification-container"></div>
+        <main class="screens">
+            <GameMenu />
+            <section class="game-screen" aria-label="Chess game">
+                <PlayerStrip id="strip-top" area="top" />
+                <ChessBoard />
+                <PlayerStrip id="strip-bottom" area="bottom" />
+                <GamePanel />
+            </section>
+        </main>
 
-    <div class="chess-layout">
-        <div class="board-column">
-            <label id="blackCaptured" class="captured-panel panel"></label>
-            <div class="board-frame">
-                <div class="board-stack">
-                    <canvas id="canvas-border" width="640" height="640"></canvas>
-                    <canvas id="canvas-chess" width="600" height="600"></canvas>
-                </div>
-            </div>
-            <label id="whiteCaptured" class="captured-panel panel"></label>
-        </div>
-        <div class="chess-history panel">
-            <h3>History</h3>
-            <ol id="movesHistiry" class="scroll-list" reversed></ol>
-        </div>
-    </div>
-
-    <div class="button-container">
-        <div id="settings-panel" class="panel">
-            <label>Difficulty:
-                <input type="number" id="difficultyInput" min="0" max="20" value="1" /> of 20
-            </label>
-            <label>
-                <input type="checkbox" id="gameType" name="gameType" value="withRobot" checked />
-                Play against the robot
-            </label>
-        </div>
-        <div class="actions">
-            <button type="button" id="newGameButton">Start new game</button>
-            <button disabled type="button" id="undoButton" onclick="undoMove()">Undo</button>
-            <button disabled type="button" id="surrenderButton">Surrender</button>
-        </div>
-        <img
-            src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fvgerman256.github.io%2Fchess.html&label=Players&icon=github&color=%230a58ca&message=&style=social&tz=Europe%2FWarsaw"
-            alt="Players counter"
-            height="20"
-        />
-    </div>
-
-    <dialog id="surrenderDialog">
-        <p>Surrender to the robot? Are you sure?</p>
-        <form method="dialog">
-            <button value="yes">Yes</button>
-            <button value="cancel">Cancel</button>
-        </form>
-    </dialog>
-
-    <div id="promotion-modal" style="display:none;">
-        <div class="modal-box">
-            <h3>Promote to:</h3>
-            <button onclick="selectPromotion('q')">Queen</button>
-            <button onclick="selectPromotion('r')">Rook</button>
-            <button onclick="selectPromotion('b')">Bishop</button>
-            <button onclick="selectPromotion('n')">Knight</button>
-        </div>
+        <ChessDialogs />
+        <div class="toasts" id="toasts" popover="manual" role="status"></div>
     </div>
 
     <script is:inline src="/js/StockfishWeb.js"></script>
-    <script is:inline type="module" src="/js/chess-game.js"></script>
-</BaseLayout>
+    <script>
+        import '../scripts/chess/main.ts';
+    </script>
+</GameLayout>
 
 <style>
-    .back-link {
-        font-family: var(--font-mono);
-        font-size: 0.85rem;
-        color: var(--muted);
+    .chess-app {
+        --bar: 3.25rem;
+        --strip: 2.6rem;
+        --gutter: 0.75rem;
+        --rail: 0px;
+        display: flex;
+        flex-direction: column;
+        min-height: 100dvh;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    .top-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        height: var(--bar);
+        padding: 0 var(--gutter);
+    }
+
+    .brand {
+        margin-right: auto;
+        margin-left: 0.5rem;
+        font-family: var(--font-serif);
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .back {
         text-decoration: none;
     }
 
-    .page-title {
-        margin: 0 0 0.35rem;
+    .back span {
+        font-size: 0.9rem;
+        font-weight: 500;
     }
 
-    .intro {
-        margin: 0 0 1.5rem;
-        color: var(--muted);
+    #sound-btn[aria-pressed='true'] :global(.when-off),
+    #sound-btn[aria-pressed='false'] :global(.when-on) {
+        display: none;
     }
 
-    /* Board + history */
-    .chess-layout {
+    .chess-app[data-screen='menu'] .game-only,
+    .chess-app[data-screen='menu'] .game-screen,
+    .chess-app[data-screen='game'] :global(.menu-screen) {
+        display: none;
+    }
+
+    .screens {
         display: flex;
-        flex-wrap: wrap;
-        align-items: flex-start;
-        gap: 1.5rem;
+        flex: 1;
+        justify-content: center;
+        view-transition-name: screen;
     }
 
-    .board-column {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        max-width: 100%;
+    /*
+     * Portrait (phones): strips, the board edge to edge, then the status, a one-row move list and the
+     * action buttons. The board takes whatever height is left, so nothing scrolls during a game.
+     */
+    .game-screen {
+        --board-size: min(
+            100vw - env(safe-area-inset-left) - env(safe-area-inset-right),
+            100dvh - var(--bar) - 2 * var(--strip) - 9.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom),
+            40rem
+        );
+        display: grid;
+        grid-template-columns: var(--board-size);
+        grid-template-areas: 'top' 'board' 'bottom' 'panel';
+        align-content: center;
+        justify-content: center;
+        row-gap: 0.15rem;
+        padding-bottom: 0.5rem;
     }
 
-    .board-frame {
-        max-width: 100%;
-        overflow-x: auto;
+    /* Landscape (desktop, tablets, phones on their side): the panel goes beside the board. */
+    @media (orientation: landscape) and (min-width: 34rem) {
+        .game-screen {
+            --board-size: min(
+                100dvh - var(--bar) - 2 * var(--strip) - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom),
+                100vw - var(--rail) - 22rem - env(safe-area-inset-left) - env(safe-area-inset-right),
+                52rem
+            );
+            grid-template-columns: var(--board-size) minmax(15rem, 19rem);
+            grid-template-rows: auto auto auto;
+            grid-template-areas: 'top panel' 'board panel' 'bottom panel';
+            column-gap: 1.5rem;
+            align-content: center;
+            padding: 0 1.5rem 1rem;
+        }
     }
 
-    .board-stack {
-        position: relative;
+    /* Phones on their side: the top bar becomes a slim icon rail on the left, so the board gets the full height. */
+    @media (orientation: landscape) and (max-height: 32rem) {
+        .chess-app {
+            --bar: 0px;
+            --rail: 3.25rem;
+            --strip: 1.9rem;
+            flex-direction: row;
+        }
+
+        .top-bar {
+            flex-direction: column;
+            width: var(--rail);
+            height: auto;
+            padding: 0.5rem 0;
+        }
+
+        .brand,
+        .back span {
+            display: none;
+        }
+
+        .back {
+            margin-bottom: auto;
+        }
+
+        .screens {
+            align-items: center;
+        }
+
+        .game-screen {
+            padding: 0 1rem;
+        }
+    }
+</style>
+
+<style is:global>
+    /* ---- Piece sets: each defines --wK ... --bP; [data-piece] picks one into --img. ---- */
+    [data-pieces='cburnett'] {
+        --wK: url('../assets/chess/pieces/cburnett/wK.svg');
+        --wQ: url('../assets/chess/pieces/cburnett/wQ.svg');
+        --wR: url('../assets/chess/pieces/cburnett/wR.svg');
+        --wB: url('../assets/chess/pieces/cburnett/wB.svg');
+        --wN: url('../assets/chess/pieces/cburnett/wN.svg');
+        --wP: url('../assets/chess/pieces/cburnett/wP.svg');
+        --bK: url('../assets/chess/pieces/cburnett/bK.svg');
+        --bQ: url('../assets/chess/pieces/cburnett/bQ.svg');
+        --bR: url('../assets/chess/pieces/cburnett/bR.svg');
+        --bB: url('../assets/chess/pieces/cburnett/bB.svg');
+        --bN: url('../assets/chess/pieces/cburnett/bN.svg');
+        --bP: url('../assets/chess/pieces/cburnett/bP.svg');
+    }
+
+    [data-pieces='chessnut'] {
+        --wK: url('../assets/chess/pieces/chessnut/wK.svg');
+        --wQ: url('../assets/chess/pieces/chessnut/wQ.svg');
+        --wR: url('../assets/chess/pieces/chessnut/wR.svg');
+        --wB: url('../assets/chess/pieces/chessnut/wB.svg');
+        --wN: url('../assets/chess/pieces/chessnut/wN.svg');
+        --wP: url('../assets/chess/pieces/chessnut/wP.svg');
+        --bK: url('../assets/chess/pieces/chessnut/bK.svg');
+        --bQ: url('../assets/chess/pieces/chessnut/bQ.svg');
+        --bR: url('../assets/chess/pieces/chessnut/bR.svg');
+        --bB: url('../assets/chess/pieces/chessnut/bB.svg');
+        --bN: url('../assets/chess/pieces/chessnut/bN.svg');
+        --bP: url('../assets/chess/pieces/chessnut/bP.svg');
+    }
+
+    [data-piece='wK'] { --img: var(--wK); }
+    [data-piece='wQ'] { --img: var(--wQ); }
+    [data-piece='wR'] { --img: var(--wR); }
+    [data-piece='wB'] { --img: var(--wB); }
+    [data-piece='wN'] { --img: var(--wN); }
+    [data-piece='wP'] { --img: var(--wP); }
+    [data-piece='bK'] { --img: var(--bK); }
+    [data-piece='bQ'] { --img: var(--bQ); }
+    [data-piece='bR'] { --img: var(--bR); }
+    [data-piece='bB'] { --img: var(--bB); }
+    [data-piece='bN'] { --img: var(--bN); }
+    [data-piece='bP'] { --img: var(--bP); }
+
+    .chess-app .pc,
+    .chess-app .piece {
         display: inline-block;
-        /* Light in both themes: chess-game.js draws the coordinates in brown on a transparent canvas. */
-        background: #EFE9DC;
-        border-radius: 6px;
+        background: var(--img, none) center / contain no-repeat;
     }
 
-    #canvas-border {
-        position: absolute;
-        left: 0;
-        top: 0;
+    /* ---- Board themes ---- */
+    [data-board] {
+        --hl-last: rgb(205 210 106 / 0.55);
+        --hl-selected: rgb(20 85 30 / 0.45);
+        --hl-dot: rgb(20 85 30 / 0.45);
     }
 
-    #canvas-chess {
-        position: relative;
-        display: block;
-        margin: 20px;
-        border: 2px solid #1A1A18;
+    [data-board='wood'] {
+        --sq-light: #F0D9B5;
+        --sq-dark: #B58863;
+    }
+
+    [data-board='green'] {
+        --sq-light: #EEEED2;
+        --sq-dark: #769656;
+        --hl-last: rgb(246 246 105 / 0.6);
+    }
+
+    [data-board='blue'] {
+        --sq-light: #DEE3E6;
+        --sq-dark: #8CA2AD;
+        --hl-last: rgb(155 199 0 / 0.42);
+        --hl-selected: rgb(20 60 120 / 0.4);
+        --hl-dot: rgb(20 60 120 / 0.4);
+    }
+
+    [data-board='slate'] {
+        --sq-light: #C4C8CF;
+        --sq-dark: #5E6672;
+        --hl-last: rgb(230 160 70 / 0.5);
+        --hl-selected: rgb(216 90 48 / 0.5);
+        --hl-dot: rgb(216 90 48 / 0.55);
+    }
+
+    /* ---- Shared controls ---- */
+    .chess-app .btn {
+        min-height: 2.75rem;
+        padding: 0.55rem 1.1rem;
+        border: 1px solid var(--g-border);
+        border-radius: 10px;
+        background: var(--g-surface-2);
+        color: var(--g-text);
+        font: 600 0.95rem var(--font-sans);
         cursor: pointer;
+        transition: filter 0.15s ease, border-color 0.15s ease;
     }
 
-    .panel {
-        background: var(--code-bg);
-        border: 1px solid var(--border);
-        border-radius: 6px;
+    .chess-app .btn:hover:not(:disabled) {
+        border-color: var(--g-accent);
     }
 
-    .captured-panel {
-        display: block;
-        min-height: 2.6rem;
-        padding: 0.2rem 1rem;
-        font-size: 1.5rem;
-        letter-spacing: 3px;
+    .chess-app .btn.primary {
+        border-color: var(--g-accent);
+        background: var(--g-accent);
+        color: var(--g-accent-text);
     }
 
-    .panel-rotated {
-        transform: rotate(180deg);
+    .chess-app .btn.primary:hover {
+        filter: brightness(1.08);
     }
 
-    .chess-history {
-        flex: 1 1 220px;
-        padding: 0.75rem 1rem;
-    }
-
-    .chess-history h3 {
-        margin: 0 0 0.5rem;
-        font-size: 1.15rem;
-    }
-
-    .scroll-list {
-        max-height: 580px;
-        margin: 0;
-        padding-left: 2.2rem;
-        overflow-y: auto;
-        overflow-x: hidden;
-        font-family: var(--font-mono);
-        font-size: 0.85rem;
-    }
-
-    .scroll-list :global(li)::marker {
-        color: var(--faint);
-    }
-
-    /* chess-game.js sizes the board to innerWidth - 20, which plus the coordinate gutters is
-       always ~24px wider than the viewport. Bleed the frame to the screen edges (cancelling the
-       .wrapper padding) and hide the right gutter (duplicate rotated rank numbers). */
-    @media (max-width: 700px) {
-        .board-frame {
-            max-width: none;
-            margin: 0 -1.5rem;
-            overflow: hidden;
-        }
-
-        .board-stack {
-            margin-left: -4px;
-            border-radius: 0;
-        }
-    }
-
-    @media (max-width: 680px) {
-        .chess-history {
-            flex-basis: 100%;
-        }
-
-        .scroll-list {
-            max-height: 180px;
-        }
-    }
-
-    /* Controls */
-    .button-container {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-        margin-top: 1.5rem;
-    }
-
-    #settings-panel {
-        display: inline-flex;
-        flex-wrap: wrap;
-        gap: 0.75rem 1.5rem;
-        align-items: center;
-        padding: 0.6rem 1rem;
-        font-size: 0.95rem;
-    }
-
-    #settings-panel label {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-
-    .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.6rem;
-    }
-
-    button {
-        font-family: var(--font-mono);
-        font-size: 0.85rem;
-        color: var(--text);
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 0.45rem 0.9rem;
-        cursor: pointer;
-        transition: border-color 0.15s ease, color 0.15s ease;
-    }
-
-    button:hover:not(:disabled) {
-        color: var(--accent);
-        border-color: var(--accent);
-    }
-
-    button:disabled {
-        color: var(--faint);
+    .chess-app .btn:disabled {
+        opacity: 0.5;
         cursor: not-allowed;
     }
 
-    input[type="number"] {
-        width: 3.5rem;
-        font-family: var(--font-mono);
-        font-size: 0.85rem;
-        color: var(--text);
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 0.25rem 0.4rem;
-    }
-
-    input[type="checkbox"] {
-        accent-color: var(--accent);
-    }
-
-    input:disabled {
-        color: var(--faint);
-    }
-
-    /* Dialogs */
-    dialog,
-    .modal-box {
-        color: var(--text);
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-    }
-
-    dialog {
-        padding: 1.25rem 1.5rem;
-    }
-
-    dialog p {
-        margin-top: 0;
-    }
-
-    dialog::backdrop {
-        background: rgba(0, 0, 0, 0.45);
-    }
-
-    dialog form {
-        display: flex;
-        gap: 0.6rem;
-        justify-content: flex-end;
-    }
-
-    #promotion-modal {
-        position: fixed;
-        z-index: 1000;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.45);
-    }
-
-    .modal-box {
-        width: 240px;
-        margin: 15% auto;
-        padding: 1.25rem;
-        text-align: center;
-    }
-
-    .modal-box h3 {
-        margin: 0 0 0.75rem;
-    }
-
-    .modal-box button {
-        margin: 0.2rem;
-    }
-
-    /* Toasts: created by chess-game.js, so outside Astro's scoping */
-    #notification-container {
-        position: fixed;
-        top: 10%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        flex-direction: column;
+    .chess-app .icon-btn {
+        display: inline-flex;
         align-items: center;
-        gap: 10px;
-        z-index: 9999;
+        gap: 0.35rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        justify-content: center;
+        padding: 0 0.5rem;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--g-text);
+        cursor: pointer;
+    }
+
+    .chess-app .icon-btn:hover {
+        background: var(--g-surface-2);
+        color: var(--g-accent);
+    }
+
+    .chess-app :is(.btn, .icon-btn):focus-visible {
+        outline: 2px solid var(--g-accent);
+        outline-offset: 2px;
+    }
+
+    .chess-app .segmented {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    .chess-app .segmented legend {
+        margin-bottom: 0.35rem;
+        padding: 0;
+        color: var(--g-muted);
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .chess-app .segmented label {
+        position: relative;
+        display: flex;
+        flex: 1 1 0;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        min-width: max-content;
+        min-height: 2.75rem;
+        padding: 0.4rem 0.45rem;
+        border: 1px solid var(--g-border);
+        border-radius: 10px;
+        background: var(--g-surface-2);
+        font-size: 0.9rem;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .chess-app .segmented input {
+        position: absolute;
+        opacity: 0;
         pointer-events: none;
     }
 
-    #notification-container :global(.notification) {
-        background: var(--text);
-        color: var(--bg);
-        font-size: 0.95rem;
-        padding: 0.7rem 1.5rem;
-        border-radius: 6px;
-        min-width: 200px;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-        animation: slide-in 0.4s ease forwards;
-        transition: all 0.5s ease;
+    .chess-app .segmented label:has(input:checked) {
+        border-color: var(--g-accent);
+        background: color-mix(in srgb, var(--g-accent) 16%, var(--g-surface));
+        font-weight: 700;
     }
 
-    #notification-container :global(.fade-out) {
+    .chess-app .segmented label:has(input:focus-visible) {
+        outline: 2px solid var(--g-accent);
+        outline-offset: 2px;
+    }
+
+    .chess-app .segmented .pc {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    /* ---- Toasts (a manual popover, so they show above open dialogs) ---- */
+    .toasts {
+        position: fixed;
+        inset: calc(var(--bar) + env(safe-area-inset-top) + 0.5rem) auto auto 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        width: max-content;
+        max-width: calc(100vw - 2rem);
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        overflow: visible;
+        translate: -50% 0;
+        pointer-events: none;
+        z-index: 50;
+    }
+
+    .toasts .toast {
+        padding: 0.5rem 1.1rem;
+        border-radius: 999px;
+        background: var(--g-text);
+        color: var(--g-bg);
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: 0 6px 16px rgb(0 0 0 / 0.25);
+        animation: toast-in 0.3s ease both;
+        transition: opacity 0.5s ease, translate 0.5s ease;
+    }
+
+    @media (orientation: portrait) {
+        .toasts .toast {
+            padding: 0.35rem 0.85rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    .toasts .toast.fade-out {
         opacity: 0;
-        transform: scale(0.9);
+        translate: 0 -0.5rem;
     }
 
-    @keyframes slide-in {
+    @keyframes toast-in {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            translate: 0 0.75rem;
         }
+    }
 
+    /* ---- Win confetti (src/scripts/chess/effects.ts) ---- */
+    .confetti {
+        position: fixed;
+        inset: 0;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 60;
+    }
+
+    .confetti span {
+        position: absolute;
+        top: -16px;
+        left: var(--x);
+        width: var(--w);
+        height: calc(var(--w) * 0.45);
+        border-radius: 2px;
+        background: var(--c);
+        animation: confetti-fall var(--dur) cubic-bezier(0.25, 0.6, 0.4, 1) var(--delay) both;
+    }
+
+    @keyframes confetti-fall {
         to {
-            opacity: 1;
-            transform: translateY(0);
+            translate: var(--drift) 105vh;
+            rotate: var(--rot);
         }
+    }
+
+    /* The menu <-> game switch, when the View Transitions API is available. */
+    ::view-transition-old(screen),
+    ::view-transition-new(screen) {
+        animation-duration: 0.25s;
     }
 </style>
