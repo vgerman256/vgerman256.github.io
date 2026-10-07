@@ -39,24 +39,33 @@ function formatMove(move: Move, notation: Notation): (Node | string)[] {
     return parts;
 }
 
-export function renderHistory(list: HTMLElement, moves: Move[], notation: Notation, result?: string) {
+/**
+ * The move list. `current` is the number of plies on the board (the move with that number is
+ * highlighted); each ply carries data-ply, the ply count after it, for jumping there in review.
+ */
+export function renderHistory(list: HTMLElement, moves: Move[], notation: Notation, current: number, result?: string) {
     const items: HTMLElement[] = [];
+    let currentEl: HTMLElement | null = null;
     for (let i = 0; i < moves.length; i += 2) {
         const li = document.createElement('li');
         const num = document.createElement('span');
         num.className = 'num';
         num.textContent = `${i / 2 + 1}.`;
         li.append(num);
-        for (const move of moves.slice(i, i + 2)) {
+        moves.slice(i, i + 2).forEach((move, j) => {
             const ply = document.createElement('span');
             ply.className = 'ply';
+            ply.dataset.ply = String(i + j + 1);
             ply.setAttribute('aria-label', move.san);
             ply.append(...formatMove(move, notation));
+            if (i + j + 1 === current) {
+                ply.classList.add('current');
+                currentEl = ply;
+            }
             li.append(ply);
-        }
+        });
         items.push(li);
     }
-    items.at(-1)?.lastElementChild?.classList.add('current');
 
     if (result) {
         const li = document.createElement('li');
@@ -66,8 +75,22 @@ export function renderHistory(list: HTMLElement, moves: Move[], notation: Notati
     }
 
     list.replaceChildren(...items);
-    list.scrollTop = list.scrollHeight;
-    list.scrollLeft = list.scrollWidth;
+    scrollIntoList(list, current >= moves.length ? null : currentEl);
+}
+
+/** Scrolls the list (only the list, never the page) to show `el`, or to the end when `el` is null. */
+function scrollIntoList(list: HTMLElement, el: HTMLElement | null) {
+    if (!el) {
+        list.scrollTop = list.scrollHeight;
+        list.scrollLeft = list.scrollWidth;
+        return;
+    }
+    const box = list.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    if (r.top < box.top) list.scrollTop += r.top - box.top;
+    else if (r.bottom > box.bottom) list.scrollTop += r.bottom - box.bottom;
+    if (r.left < box.left) list.scrollLeft += r.left - box.left - 8;
+    else if (r.right > box.right) list.scrollLeft += r.right - box.right + 8;
 }
 
 /** The pieces `color` has captured, most valuable first, and "+N" when `color` is ahead in material. */

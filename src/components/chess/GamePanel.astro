@@ -1,10 +1,17 @@
 ---
 // Status line, move history and the action buttons. Beside the board in landscape, below it in portrait.
+// After the game ends, the status line gets buttons for stepping through the moves (main.ts: Review).
 import ChessIcon from './ChessIcon.astro';
 ---
 
 <aside class="game-panel" aria-label="Game">
-    <p class="status" id="status" aria-live="polite"></p>
+    <div class="status-row" id="status-row">
+        <button type="button" class="nav-btn" id="review-first" aria-label="Start position"><ChessIcon name="first" /></button>
+        <button type="button" class="nav-btn" id="review-prev" aria-label="Previous move"><ChessIcon name="prev" /></button>
+        <p class="status" id="status" aria-live="polite"></p>
+        <button type="button" class="nav-btn" id="review-next" aria-label="Next move"><ChessIcon name="next" /></button>
+        <button type="button" class="nav-btn" id="review-last" aria-label="Final position"><ChessIcon name="last" /></button>
+    </div>
     <button type="button" class="btn primary retry" id="retry-btn" hidden>Retry the robot's move</button>
     <div class="history-card">
         <div class="history-head">
@@ -37,11 +44,53 @@ import ChessIcon from './ChessIcon.astro';
         padding: 0 0.35rem;
     }
 
+    /* Always as tall as the nav buttons, so the board doesn't shrink when they appear at the end. */
+    .status-row {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        min-height: 2.25rem;
+    }
+
     .status {
-        min-height: 1.5em;
+        flex: 1;
+        min-width: 0;
         margin: 0;
         font-weight: 600;
         text-align: center;
+    }
+
+    .nav-btn {
+        display: inline-grid;
+        place-items: center;
+        flex: none;
+        width: 2.6rem;
+        height: 2.25rem;
+        padding: 0;
+        border: 1px solid var(--g-border);
+        border-radius: 8px;
+        background: var(--g-surface);
+        color: var(--g-text);
+        cursor: pointer;
+    }
+
+    .status-row:not(:global(.reviewing)) .nav-btn {
+        display: none;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+        border-color: var(--g-accent);
+        color: var(--g-accent);
+    }
+
+    .nav-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+    }
+
+    .nav-btn:focus-visible {
+        outline: 2px solid var(--g-accent);
+        outline-offset: 2px;
     }
 
     .retry[hidden] {
@@ -117,6 +166,14 @@ import ChessIcon from './ChessIcon.astro';
         border-radius: 5px;
     }
 
+    .history:global(.reviewable) :global(.ply) {
+        cursor: pointer;
+    }
+
+    .history:global(.reviewable) :global(.ply:hover) {
+        background: color-mix(in srgb, var(--g-accent) 12%, transparent);
+    }
+
     .history :global(.ply.current) {
         background: color-mix(in srgb, var(--g-accent) 22%, transparent);
         font-weight: 700;
@@ -177,10 +234,14 @@ import ChessIcon from './ChessIcon.astro';
             padding: 0;
         }
 
-        .status {
-            padding: 0.6rem 0.75rem;
+        .status-row {
+            padding: 0.35rem;
             border-radius: 10px;
             background: var(--g-surface-2);
+        }
+
+        .status {
+            padding: 0.25rem 0.4rem;
         }
 
         .history-card {
