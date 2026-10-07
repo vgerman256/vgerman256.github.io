@@ -144,4 +144,10 @@ The branch review against `main` found these; all four were fixed in one commit 
 3. **The review status line ignored the notation setting.** It now uses the move list's formatter (figurine, algebraic or coordinates). The icons have no text, so the visible move is `aria-hidden` and a screen-reader-only copy gives the plain SAN.
 4. **↑/↓ still moved square focus in review while ←/→ stepped moves.** Once the game is over no piece can move, so the review handler now takes ↑/↓ too and ignores them. During a game all four arrows still move square focus.
 
-The review's other findings were left as they are: the 0.7 s before the game-over card, rebuilding the list on each step, and the redundant `viewGame` state. A swipe ending on a panel button doesn't also click it (the click goes to the common ancestor), so it was not a problem.
+A second commit fixes the remaining three:
+
+5. **Review worked in the 0.7 s before the game-over card.** A quick step back right after the last move was then covered by the card, opened over an earlier position. Review now starts only once that pause is over: the nav buttons, keys, swipes and list clicks stay inactive until the card opens (or would have, if the user has left the game screen). The win card and confetti are kept.
+6. **Each step rebuilt the whole move list.** `renderHistory()` remembers what it last drew (the cached `moves` array, the notation and the result). When only the shown ply changed, it just moves the `.current` highlight and scrolls to it. `GameController.history()` returns a new array after every change, so comparing the array is enough.
+7. **`viewGame` duplicated `viewPly`.** It is removed. `shownGame()` builds the position from `moves[viewPly - 1].after` (a cheap FEN load), and `updatePanel()` builds it once and passes it to both strips.
+
+A swipe ending on a panel button doesn't also click it (the click goes to the common ancestor), so that finding needed no change.

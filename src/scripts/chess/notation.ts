@@ -39,13 +39,40 @@ export function formatMove(move: Move, notation: Notation): (Node | string)[] {
     return parts;
 }
 
+// What each list last drew. A review step only changes `current`, so the moves aren't rebuilt for it.
+// GameController.history() returns a new array after every change, so comparing the array is enough.
+const drawn = new WeakMap<HTMLElement, { moves: Move[]; notation: Notation; result?: string }>();
+
 /**
  * The move list. `current` is the number of plies on the board (the move with that number is
  * highlighted); each ply carries data-ply, the ply count after it, for jumping there in review.
  */
 export function renderHistory(list: HTMLElement, moves: Move[], notation: Notation, current: number, result?: string) {
+    const last = drawn.get(list);
+    if (!last || last.moves !== moves || last.notation !== notation || last.result !== result) {
+        list.replaceChildren(...historyItems(moves, notation, result));
+        drawn.set(list, { moves, notation, result });
+    }
+
+    list.querySelector('.ply.current')?.classList.remove('current');
+    const currentEl = list.querySelector<HTMLElement>(`.ply[data-ply="${current}"]`);
+    currentEl?.classList.add('current');
+
+    if (current >= moves.length) {
+        // The live (or final) position: show the latest moves and the result.
+        list.scrollTop = list.scrollHeight;
+        list.scrollLeft = list.scrollWidth;
+    } else if (!currentEl) {
+        // The start position (review at ply 0).
+        list.scrollTop = 0;
+        list.scrollLeft = 0;
+    } else {
+        scrollIntoList(list, currentEl);
+    }
+}
+
+function historyItems(moves: Move[], notation: Notation, result?: string): HTMLElement[] {
     const items: HTMLElement[] = [];
-    let currentEl: HTMLElement | null = null;
     for (let i = 0; i < moves.length; i += 2) {
         const li = document.createElement('li');
         const num = document.createElement('span');
@@ -58,10 +85,6 @@ export function renderHistory(list: HTMLElement, moves: Move[], notation: Notati
             ply.dataset.ply = String(i + j + 1);
             ply.setAttribute('aria-label', move.san);
             ply.append(...formatMove(move, notation));
-            if (i + j + 1 === current) {
-                ply.classList.add('current');
-                currentEl = ply;
-            }
             li.append(ply);
         });
         items.push(li);
@@ -73,19 +96,7 @@ export function renderHistory(list: HTMLElement, moves: Move[], notation: Notati
         li.textContent = result;
         items.push(li);
     }
-
-    list.replaceChildren(...items);
-    if (current >= moves.length) {
-        // The live (or final) position: show the latest moves and the result.
-        list.scrollTop = list.scrollHeight;
-        list.scrollLeft = list.scrollWidth;
-    } else if (!currentEl) {
-        // The start position (review at ply 0).
-        list.scrollTop = 0;
-        list.scrollLeft = 0;
-    } else {
-        scrollIntoList(list, currentEl);
-    }
+    return items;
 }
 
 /** Scrolls the list (only the list, never the page) just enough to show `el`. */

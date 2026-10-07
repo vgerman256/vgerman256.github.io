@@ -202,7 +202,7 @@ function applyModeView() {
 function onPosition(move: Move | null, animate: boolean) {
     clearTimeout(flipTimer);
     viewPly = null;
-    viewGame = null;
+    overPending = false;
     if (!animate) applyModeView();
     board.render(controller.game, { move, animate, lastMove: controller.history().at(-1) });
 
@@ -221,9 +221,8 @@ function onPosition(move: Move | null, animate: boolean) {
     updatePanel();
 }
 
-/** Fills a player strip for the position on the board, after `moves` (the moves up to it). */
-function fillStrip(strip: HTMLElement, color: Color, moves: Move[]) {
-    const game = shownGame();
+/** Fills a player strip for `game`, the position on the board, after `moves` (the moves up to it). */
+function fillStrip(strip: HTMLElement, color: Color, moves: Move[], game: Chess) {
     strip.querySelector<HTMLElement>('.player-color')!.dataset.piece = `${color}K`;
     strip.querySelector('.player-name')!.textContent = controller.playerName(color);
     strip.querySelector<HTMLElement>('.thinking')!.hidden = !(controller.thinking && game.turn() === color);
@@ -266,9 +265,10 @@ function updatePanel() {
     const moves = controller.history();
     const ply = shownPly();
     const shownMoves = viewPly === null ? moves : moves.slice(0, ply);
+    const game = shownGame();
     const bottom: Color = board.flipped ? 'b' : 'w';
-    fillStrip(stripBottom, bottom, shownMoves);
-    fillStrip(stripTop, bottom === 'w' ? 'b' : 'w', shownMoves);
+    fillStrip(stripBottom, bottom, shownMoves, game);
+    fillStrip(stripTop, bottom === 'w' ? 'b' : 'w', shownMoves, game);
 
     if (controller.result && viewPly !== null) statusLine.replaceChildren(...reviewStatus(viewPly));
     else statusLine.textContent = statusText();
@@ -325,11 +325,18 @@ $('new-btn').addEventListener('click', async () => {
 
 // The number of plies on the board while reviewing, or null for the live (final) position.
 let viewPly: number | null = null;
-let viewGame: Chess | null = null;
+// Set from the end of the game until the game-over card opens, so a quick step back isn't then covered
+// by the card (which shows the final result).
+let overPending = false;
 
-const isReviewing = () => !!controller.result;
-const shownGame = () => viewGame ?? controller.game;
+const isReviewing = () => !!controller.result && !overPending;
 const shownPly = () => viewPly ?? controller.history().length;
+
+/** The position on the board. Each verbose move carries the position after it, so nothing is replayed. */
+function shownGame(): Chess {
+    if (viewPly === null) return controller.game;
+    return new Chess(viewPly ? controller.history()[viewPly - 1].after : DEFAULT_POSITION);
+}
 
 function showPly(ply: number) {
     const moves = controller.history();
@@ -338,12 +345,11 @@ function showPly(ply: number) {
     if (!isReviewing() || to === from) return;
 
     viewPly = to === moves.length ? null : to;
-    // Each verbose move carries the position after it, so no replaying is needed.
-    viewGame = viewPly === null ? null : new Chess(to ? moves[to - 1].after : DEFAULT_POSITION);
+    const game = shownGame();
     // A single step forward animates like the move itself (a promoting pawn turns into its piece).
     const step = to === from + 1 ? moves[to - 1] : null;
-    board.render(shownGame(), { move: step, animate: true, lastMove: moves[to - 1] });
-    if (step) playSound(shownGame().isCheck() ? 'check' : step.captured ? 'capture' : 'move');
+    board.render(game, { move: step, animate: true, lastMove: moves[to - 1] });
+    if (step) playSound(game.isCheck() ? 'check' : step.captured ? 'capture' : 'move');
     updatePanel();
 }
 
@@ -396,6 +402,7 @@ const overDialog = $<HTMLDialogElement>('over-dialog');
 let overTimer = 0;
 
 function onGameOver(result: GameResult) {
+    overPending = true;
     board.refresh();
     updatePanel();
 
@@ -418,11 +425,14 @@ function onGameOver(result: GameResult) {
     record.hidden = mode.kind !== 'robot';
     if (mode.kind === 'robot') record.textContent = `Level ${mode.level}: ${formatScore(stats.robot[mode.level])}`;
 
-    // A short pause to see the final move first. Skipped if the user has meanwhile started another game
-    // or left for the menu.
+    // A short pause to see the final move first, then review starts and the card opens. The card is
+    // skipped if the user has meanwhile started another game or left for the menu.
     clearTimeout(overTimer);
     overTimer = window.setTimeout(() => {
-        if (controller.result !== result || app.dataset.screen !== 'game') return;
+        if (controller.result !== result) return;
+        overPending = false;
+        updatePanel();
+        if (app.dataset.screen !== 'game') return;
         overDialog.returnValue = '';
         overDialog.showModal();
         if (humanWon) confetti();
