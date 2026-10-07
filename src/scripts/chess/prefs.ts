@@ -48,7 +48,7 @@ const choices = {
     color: ['w', 'b', 'random'],
 } as const;
 
-function read(key: string): unknown {
+export function read(key: string): unknown {
     try {
         const raw = localStorage.getItem(key);
         return raw ? JSON.parse(raw) : null;
@@ -57,7 +57,7 @@ function read(key: string): unknown {
     }
 }
 
-function write(key: string, value: unknown) {
+export function write(key: string, value: unknown) {
     try {
         if (value === null) {
             localStorage.removeItem(key);

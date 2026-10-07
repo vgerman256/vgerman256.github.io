@@ -5,6 +5,7 @@ import { confetti, playSound, setSoundEnabled } from './effects';
 import { GameController, colorName, modeFromSaved, type GameMode, type GameResult } from './game';
 import { renderCaptured, renderHistory } from './notation';
 import { clampLevel, loadPrefs, loadSavedGame, savePrefs, type Prefs } from './prefs';
+import { formatScore, loadStats, recordGame, renderStats, resetStats } from './stats';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -36,6 +37,7 @@ function showScreen(screen: Screen) {
     const apply = () => {
         app.dataset.screen = screen;
         updateContinue();
+        if (screen === 'menu') updateStats();
         // The move list can only scroll to the latest move while it is visible.
         if (screen === 'game') updatePanel();
     };
@@ -143,6 +145,17 @@ function updateContinue() {
     $('continue-summary').textContent = summary;
 }
 
+function updateStats() {
+    $('stats-card').hidden = !renderStats($('stats-body'), loadStats());
+}
+
+$('stats-reset').addEventListener('click', async () => {
+    if (await confirmAction('Reset your chess stats on this device?', 'Reset')) {
+        resetStats();
+        updateStats();
+    }
+});
+
 continueTile.addEventListener('click', () => {
     if (hasGameInMemory()) {
         enterGame();
@@ -225,7 +238,8 @@ function statusText(): string {
         const move = controller.history()[viewPly - 1];
         return move ? `${Math.ceil(viewPly / 2)}${move.color === 'w' ? '.' : '…'} ${move.san}` : 'Start position';
     }
-    if (result) return `${result.reason} · ${result.result}`;
+    // Word joiners keep "1/2-1/2" from breaking at its hyphen when the line wraps.
+    if (result) return `${result.reason} · ${result.result.replace('-', '⁠-⁠')}`;
     if (controller.thinking) return 'The robot is thinking…';
     if (controller.needsRetry()) return 'The robot could not move';
 
@@ -384,6 +398,11 @@ function onGameOver(result: GameResult) {
     $('over-score').textContent = result.result;
     $('over-icon').dataset.piece = `${result.winner ?? 'w'}K`;
     $('over-icon').classList.toggle('draw', !result.winner);
+
+    const stats = recordGame(mode, result);
+    const record = $('over-record');
+    record.hidden = mode.kind !== 'robot';
+    if (mode.kind === 'robot') record.textContent = `Level ${mode.level}: ${formatScore(stats.robot[mode.level])}`;
 
     // A short pause to see the final move first. Skipped if the user has meanwhile started another game
     // or left for the menu.

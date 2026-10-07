@@ -10,7 +10,7 @@ Decisions made with the user:
 - Stats count robot wins, losses and draws **per level**. 2-player games only add to a "games played" total. Surrender counts as a loss. A game you abandon (New game, Menu) is **not** counted.
 - The rating hint is a **rough performance rating** computed from the counts. It is shown after 5 or more robot games.
 
-First step of the implementation: copy this plan to `specs/chess-review-and-stats-v2.2.md`, as CLAUDE.md requires. Each part below gets its own commit, after `pnpm build` and a browser check.
+Each part below gets its own commit, after `pnpm build` and a browser check.
 
 ## Part 1: step through a finished game
 
@@ -62,7 +62,7 @@ First step of the implementation: copy this plan to `specs/chess-review-and-stat
   - `recordGame(mode, result)` updates the counts and saves them.
   - `ratingEstimate(stats)` returns `null` under 5 robot games.
     - Each level gets an approximate rating: `800 + 90 × level`, which runs from 800 at level 0 to 2600 at level 20. These values line up with the menu's level bands (Beginner … Master).
-    - The estimate is the average opponent rating plus 400 × (W − L) / N, clamped to ±400 around that average and rounded to the nearest 50.
+    - The estimate is the average opponent rating plus 400 × (W − L) / N, rounded to the nearest 50. Since |W − L| ≤ N, it never lies more than 400 from that average, so no clamp is needed.
   - `renderStats(el, stats)` builds the card's DOM, the same way `notation.ts` builds the history.
 
 ### Where results are recorded
@@ -75,7 +75,7 @@ First step of the implementation: copy this plan to `specs/chess-review-and-stat
 
 - **Menu (`GameMenu.astro`):** a "Your stats" card below the tiles. It is hidden when nothing has been played yet. It shows:
   - Robot games: played · won · lost · drawn, and the win rate.
-  - The rating hint, "≈ 1350 · rough estimate". With fewer than 5 robot games: "Play 5 games vs the robot for a rating estimate".
+  - The rating hint, "≈ 1350 · rough estimate". With fewer than 5 robot games it counts down: "Play 3 more games vs the robot for a rating estimate."
   - A `<details>` "By level" table, listing only the levels played.
   - The 2-player games played.
   - "Reset stats" behind the existing `confirmAction()` dialog.
@@ -117,3 +117,20 @@ First step of the implementation: copy this plan to `specs/chess-review-and-stat
    - Seed `chess_stats` with 6 games → a rating appears. Corrupt JSON → the card falls back to empty, with no errors.
    - Reset stats asks first, then clears the card.
 4. **Frozen pages:** `/math.html`, `/abcgame.html` and `/chess.html` (redirect) still load.
+
+## Result
+
+Both parts were done on 2026-10-07, each in its own commit after `pnpm build` and a headless Chrome check against `pnpm preview`:
+
+- **Part 1:** the buttons, ←/→/Home/End, clicks on the move list and touch swipes all step through a finished game. A vertical swipe does nothing. The captured pieces, check highlight and move list follow the shown position, and stepping back over `bxa8=Q` turns the queen back into a pawn and forward again. New game returns to the live board.
+- **Part 1, layout:**
+  - Portrait: the status row is always 2.25rem tall, and the panel budget is now 10.35rem. The old 9.5rem budget was already about 1px short; that only showed once the board became height-limited.
+  - On a 375×667 phone the board is 366px instead of 375px. On a 390×844 phone it is still full width. Nothing scrolls in either case.
+  - In review, a long result text takes up to two smaller lines in portrait. In the narrow landscape column it gets its own line above the buttons. Word joiners keep "1/2-1/2" from breaking at its hyphen.
+- **Part 2:**
+  - Surrender at level 3 → "Level 3: 0 won · 1 lost · 0 drawn" on the game-over card, and 1 loss in the menu card.
+  - A fool's mate in 2-player mode → "2-player games finished: 1".
+  - A robot game left with New game is not counted.
+  - Seeded stats (level 5: 3–2–1, level 10: 0–1–0) → "≈ 1300".
+  - Corrupt JSON or out-of-range values → the card stays hidden, with no errors.
+  - Reset asks first and then removes `chess_stats`.

@@ -38,6 +38,7 @@ const pieceSets = [
         <h2 id="over-title"></h2>
         <p id="over-reason"></p>
         <p class="score" id="over-score"></p>
+        <p class="record" id="over-record" hidden></p>
         <div class="buttons">
             <button class="btn" value="review">View board</button>
             <button class="btn" value="menu">Menu</button>
@@ -167,6 +168,11 @@ const pieceSets = [
     .over p {
         margin: 0;
         color: var(--g-muted);
+    }
+
+    .over .record {
+        margin: -0.75rem 0 1.25rem;
+        font-size: 0.9rem;
     }
 
     .over .score {

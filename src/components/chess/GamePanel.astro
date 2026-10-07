@@ -78,6 +78,12 @@ import ChessIcon from './ChessIcon.astro';
         display: none;
     }
 
+    /* Between the buttons a long result ("Threefold repetition · 1/2-1/2") may take two lines. */
+    .status-row:global(.reviewing) .status {
+        font-size: 0.85rem;
+        line-height: 1.15;
+    }
+
     .nav-btn:hover:not(:disabled) {
         border-color: var(--g-accent);
         color: var(--g-accent);
@@ -234,14 +240,28 @@ import ChessIcon from './ChessIcon.astro';
             padding: 0;
         }
 
+        /* The side column is narrow: in review the status gets its own line, the buttons go below it. */
         .status-row {
+            flex-wrap: wrap;
             padding: 0.35rem;
             border-radius: 10px;
             background: var(--g-surface-2);
         }
 
-        .status {
+        .status,
+        .status-row:global(.reviewing) .status {
             padding: 0.25rem 0.4rem;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        .status-row:global(.reviewing) .status {
+            order: -1;
+            flex-basis: 100%;
+        }
+
+        .nav-btn {
+            flex: 1;
         }
 
         .history-card {
