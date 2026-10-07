@@ -13,7 +13,7 @@ function figurine(color: Color, type: string): HTMLElement {
 }
 
 /** A move as DOM nodes: SAN with piece icons (figurine), plain SAN, or the old from–to coordinates. */
-function formatMove(move: Move, notation: Notation): (Node | string)[] {
+export function formatMove(move: Move, notation: Notation): (Node | string)[] {
     if (notation === 'san') return [move.san];
 
     if (notation === 'coords') {
@@ -75,16 +75,21 @@ export function renderHistory(list: HTMLElement, moves: Move[], notation: Notati
     }
 
     list.replaceChildren(...items);
-    scrollIntoList(list, current >= moves.length ? null : currentEl);
-}
-
-/** Scrolls the list (only the list, never the page) to show `el`, or to the end when `el` is null. */
-function scrollIntoList(list: HTMLElement, el: HTMLElement | null) {
-    if (!el) {
+    if (current >= moves.length) {
+        // The live (or final) position: show the latest moves and the result.
         list.scrollTop = list.scrollHeight;
         list.scrollLeft = list.scrollWidth;
-        return;
+    } else if (!currentEl) {
+        // The start position (review at ply 0).
+        list.scrollTop = 0;
+        list.scrollLeft = 0;
+    } else {
+        scrollIntoList(list, currentEl);
     }
+}
+
+/** Scrolls the list (only the list, never the page) just enough to show `el`. */
+function scrollIntoList(list: HTMLElement, el: HTMLElement) {
     const box = list.getBoundingClientRect();
     const r = el.getBoundingClientRect();
     if (r.top < box.top) list.scrollTop += r.top - box.top;

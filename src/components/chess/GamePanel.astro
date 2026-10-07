@@ -60,6 +60,22 @@ import ChessIcon from './ChessIcon.astro';
         text-align: center;
     }
 
+    /* The reviewed move, in the move list's notation (src/scripts/chess/main.ts: reviewStatus). */
+    .status :global(.fig) {
+        width: 1.3em;
+        height: 1.3em;
+        vertical-align: -0.3em;
+    }
+
+    .status :global(.sr-only) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
     .nav-btn {
         display: inline-grid;
         place-items: center;

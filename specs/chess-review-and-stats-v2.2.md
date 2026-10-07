@@ -134,3 +134,14 @@ Both parts were done on 2026-10-07, each in its own commit after `pnpm build` an
   - Seeded stats (level 5: 3–2–1, level 10: 0–1–0) → "≈ 1300".
   - Corrupt JSON or out-of-range values → the card stays hidden, with no errors.
   - Reset asks first and then removes `chess_stats`.
+
+## Fixes from the code review
+
+The branch review against `main` found these; all four were fixed in one commit on 2026-10-07:
+
+1. **⏮ / Home scrolled the move list to the end.** At ply 0 no move is highlighted, and that case fell through to "scroll to the end". It now scrolls to the start.
+2. **"View board" lost keyboard focus after a game with no moves.** ◀ is disabled then (so is ▶), and `focus()` did nothing. Focus now goes to New game in that case.
+3. **The review status line ignored the notation setting.** It now uses the move list's formatter (figurine, algebraic or coordinates). The icons have no text, so the visible move is `aria-hidden` and a screen-reader-only copy gives the plain SAN.
+4. **↑/↓ still moved square focus in review while ←/→ stepped moves.** Once the game is over no piece can move, so the review handler now takes ↑/↓ too and ignores them. During a game all four arrows still move square focus.
+
+The review's other findings were left as they are: the 0.7 s before the game-over card, rebuilding the list on each step, and the redundant `viewGame` state. A swipe ending on a panel button doesn't also click it (the click goes to the common ancestor), so it was not a problem.

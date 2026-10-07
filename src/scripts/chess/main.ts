@@ -3,7 +3,7 @@ import { Chess, DEFAULT_POSITION, type Color, type Move, type PieceSymbol, type 
 import { BoardView } from './board-view';
 import { confetti, playSound, setSoundEnabled } from './effects';
 import { GameController, colorName, modeFromSaved, type GameMode, type GameResult } from './game';
-import { renderCaptured, renderHistory } from './notation';
+import { formatMove, renderCaptured, renderHistory } from './notation';
 import { clampLevel, loadPrefs, loadSavedGame, savePrefs, type Prefs } from './prefs';
 import { formatScore, loadStats, recordGame, renderStats, resetStats } from './stats';
 
@@ -231,15 +231,27 @@ function fillStrip(strip: HTMLElement, color: Color, moves: Move[]) {
     renderCaptured(strip.querySelector('.captured')!, moves, color, game);
 }
 
+const WORD_JOINER = String.fromCharCode(0x2060);
+
+/** The status line while reviewing: the shown move in the chosen notation, or the start position. */
+function reviewStatus(ply: number): (Node | string)[] {
+    const move = controller.history()[ply - 1];
+    if (!move) return ['Start position'];
+    // The figurine icons have no text, so screen readers get the move as plain SAN instead.
+    const shown = document.createElement('span');
+    shown.setAttribute('aria-hidden', 'true');
+    shown.append(...formatMove(move, prefs.notation));
+    const spoken = document.createElement('span');
+    spoken.className = 'sr-only';
+    spoken.textContent = move.san;
+    return [`${Math.ceil(ply / 2)}${move.color === 'w' ? '.' : '…'} `, shown, spoken];
+}
+
 function statusText(): string {
     const game = controller.game;
     const result = controller.result;
-    if (result && viewPly !== null) {
-        const move = controller.history()[viewPly - 1];
-        return move ? `${Math.ceil(viewPly / 2)}${move.color === 'w' ? '.' : '…'} ${move.san}` : 'Start position';
-    }
     // Word joiners keep "1/2-1/2" from breaking at its hyphen when the line wraps.
-    if (result) return `${result.reason} · ${result.result.replace('-', '⁠-⁠')}`;
+    if (result) return `${result.reason} · ${result.result.replace('-', `${WORD_JOINER}-${WORD_JOINER}`)}`;
     if (controller.thinking) return 'The robot is thinking…';
     if (controller.needsRetry()) return 'The robot could not move';
 
@@ -258,7 +270,8 @@ function updatePanel() {
     fillStrip(stripBottom, bottom, shownMoves);
     fillStrip(stripTop, bottom === 'w' ? 'b' : 'w', shownMoves);
 
-    statusLine.textContent = statusText();
+    if (controller.result && viewPly !== null) statusLine.replaceChildren(...reviewStatus(viewPly));
+    else statusLine.textContent = statusText();
     retryButton.hidden = !controller.needsRetry();
     renderHistory(historyList, moves, prefs.notation, ply, controller.result?.result);
 
@@ -363,17 +376,18 @@ window.addEventListener('pointerup', (e) => {
 });
 
 // ←/→ step and Home/End jump. Captured before the board's own arrow-key handling: once the game is
-// over no piece can move, so left/right step through the game even when a square has focus.
+// over no piece can move, so the board's square-by-square focus (↑/↓ too) has no use and is switched off.
 document.addEventListener('keydown', (e) => {
     if (!isReviewing() || app.dataset.screen !== 'game' || e.altKey || e.ctrlKey || e.metaKey) return;
     if ((e.target as Element).closest('input, select, textarea, dialog')) return;
-    const targets: Record<string, number> = {
-        ArrowLeft: shownPly() - 1, ArrowRight: shownPly() + 1, Home: 0, End: Infinity,
+    const targets: Record<string, number | null> = {
+        ArrowLeft: shownPly() - 1, ArrowRight: shownPly() + 1, Home: 0, End: Infinity, ArrowUp: null, ArrowDown: null,
     };
     if (!(e.key in targets)) return;
     e.preventDefault();
     e.stopPropagation();
-    showPly(targets[e.key]);
+    const ply = targets[e.key];
+    if (ply !== null) showPly(ply);
 }, { capture: true });
 
 // ---- Game over -----------------------------------------------------------------------------------
@@ -418,7 +432,9 @@ function onGameOver(result: GameResult) {
 overDialog.addEventListener('close', () => {
     if (overDialog.returnValue === 'again') startGame(controller.mode);
     else if (overDialog.returnValue === 'menu') $('menu-btn').click();
-    else if (overDialog.returnValue === 'review') reviewPrev.focus();
+    // Land keyboard users on ◀. A game that ended before any move has nothing to step through (all the
+    // nav buttons are disabled), so focus goes to New game instead.
+    else if (overDialog.returnValue === 'review') (reviewPrev.disabled ? $('new-btn') : reviewPrev).focus();
 });
 
 // ---- Dialogs -------------------------------------------------------------------------------------
