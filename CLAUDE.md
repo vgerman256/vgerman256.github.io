@@ -23,6 +23,7 @@ The chess game (`/chess/`, see `specs/chess-overhaul-v2.0.md`) is a full-screen 
 - **Engine:** the only frozen script it loads is `public/js/StockfishWeb.js` (`is:inline`, typed in `src/scripts/chess/stockfish-web.d.ts`). It is called only through `src/scripts/chess/engine.ts`, which queues requests one at a time.
 - **Runtime styles:** squares, pieces, history entries, toasts and confetti are created by the scripts at runtime, so style them with `:global()`.
 - **Game logic:** `src/scripts/chess/game.ts` is a deliberate port of the old game flow. Known logic bugs are tracked in `specs/chess-known-issues.md` and fixed as separate tasks, not as part of UI work.
+- **Review and stats** (`specs/chess-review-and-stats-v2.2.md`): after a game ends, `main.ts` shows earlier positions from the moves' `after` FENs without touching `GameController`. Finished games are counted in `stats.ts` (the `chess_stats` key); abandoned games are not.
 - **Old link:** `public/chess.html` is only a redirect to `/chess/` for old links.
 
 ## Stack
@@ -62,9 +63,9 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 │   ├── lib/icons.ts            # icon names shared by PostIcon and the posts schema
 │   ├── lib/posts.ts            # getSortedPosts(): the one post order used by the home list and newer/older links
 │   ├── lib/reading-time.mjs    # remark plugin
-│   └── scripts/chess/          # chess client code: main (wiring), game (flow), board-view, notation, engine, effects, prefs
+│   └── scripts/chess/          # chess client code: main (wiring), game (flow), board-view, notation, engine, effects, prefs, stats (results + rating estimate)
 ├── astro.config.mjs, tsconfig.json, package.json, pnpm-lock.yaml
-└── specs/                      # versioned plans: blog-spec-v1.0.md (original design), chess-overhaul-v2.0.md, chess-known-issues.md
+└── specs/                      # versioned plans: blog-spec-v1.0.md (original design), chess-overhaul-v2.0.md, chess-review-and-stats-v2.2.md (post-game review, stats), chess-known-issues.md
 ```
 
 ## Content authoring — adding a post

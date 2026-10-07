@@ -1,10 +1,11 @@
 // Entry point: wires the menu, the board, the side panel, the dialogs and the settings to the GameController.
-import { Chess, type Color, type Move, type PieceSymbol, type Square } from 'chess.js';
+import { Chess, DEFAULT_POSITION, type Color, type Move, type PieceSymbol, type Square } from 'chess.js';
 import { BoardView } from './board-view';
 import { confetti, playSound, setSoundEnabled } from './effects';
 import { GameController, colorName, modeFromSaved, type GameMode, type GameResult } from './game';
-import { renderCaptured, renderHistory } from './notation';
+import { formatMove, renderCaptured, renderHistory } from './notation';
 import { clampLevel, loadPrefs, loadSavedGame, savePrefs, type Prefs } from './prefs';
+import { formatScore, loadStats, recordGame, renderStats, resetStats } from './stats';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -36,6 +37,7 @@ function showScreen(screen: Screen) {
     const apply = () => {
         app.dataset.screen = screen;
         updateContinue();
+        if (screen === 'menu') updateStats();
         // The move list can only scroll to the latest move while it is visible.
         if (screen === 'game') updatePanel();
     };
@@ -143,6 +145,17 @@ function updateContinue() {
     $('continue-summary').textContent = summary;
 }
 
+function updateStats() {
+    $('stats-card').hidden = !renderStats($('stats-body'), loadStats());
+}
+
+$('stats-reset').addEventListener('click', async () => {
+    if (await confirmAction('Reset your chess stats on this device?', 'Reset')) {
+        resetStats();
+        updateStats();
+    }
+});
+
 continueTile.addEventListener('click', () => {
     if (hasGameInMemory()) {
         enterGame();
@@ -163,6 +176,11 @@ const stripTop = $('strip-top');
 const stripBottom = $('strip-bottom');
 const historyList = $('history');
 const statusLine = $('status');
+const statusRow = $('status-row');
+const reviewFirst = $<HTMLButtonElement>('review-first');
+const reviewPrev = $<HTMLButtonElement>('review-prev');
+const reviewNext = $<HTMLButtonElement>('review-next');
+const reviewLast = $<HTMLButtonElement>('review-last');
 const undoButton = $<HTMLButtonElement>('undo-btn');
 const pgnButton = $<HTMLButtonElement>('pgn-btn');
 const surrenderButton = $<HTMLButtonElement>('surrender-btn');
@@ -183,6 +201,8 @@ function applyModeView() {
 
 function onPosition(move: Move | null, animate: boolean) {
     clearTimeout(flipTimer);
+    viewPly = null;
+    overPending = false;
     if (!animate) applyModeView();
     board.render(controller.game, { move, animate, lastMove: controller.history().at(-1) });
 
@@ -201,8 +221,8 @@ function onPosition(move: Move | null, animate: boolean) {
     updatePanel();
 }
 
-function fillStrip(strip: HTMLElement, color: Color, moves: Move[]) {
-    const game = controller.game;
+/** Fills a player strip for `game`, the position on the board, after `moves` (the moves up to it). */
+function fillStrip(strip: HTMLElement, color: Color, moves: Move[], game: Chess) {
     strip.querySelector<HTMLElement>('.player-color')!.dataset.piece = `${color}K`;
     strip.querySelector('.player-name')!.textContent = controller.playerName(color);
     strip.querySelector<HTMLElement>('.thinking')!.hidden = !(controller.thinking && game.turn() === color);
@@ -210,10 +230,27 @@ function fillStrip(strip: HTMLElement, color: Color, moves: Move[]) {
     renderCaptured(strip.querySelector('.captured')!, moves, color, game);
 }
 
+const WORD_JOINER = String.fromCharCode(0x2060);
+
+/** The status line while reviewing: the shown move in the chosen notation, or the start position. */
+function reviewStatus(ply: number): (Node | string)[] {
+    const move = controller.history()[ply - 1];
+    if (!move) return ['Start position'];
+    // The figurine icons have no text, so screen readers get the move as plain SAN instead.
+    const shown = document.createElement('span');
+    shown.setAttribute('aria-hidden', 'true');
+    shown.append(...formatMove(move, prefs.notation));
+    const spoken = document.createElement('span');
+    spoken.className = 'sr-only';
+    spoken.textContent = move.san;
+    return [`${Math.ceil(ply / 2)}${move.color === 'w' ? '.' : '…'} `, shown, spoken];
+}
+
 function statusText(): string {
     const game = controller.game;
     const result = controller.result;
-    if (result) return `${result.reason} · ${result.result}`;
+    // Word joiners keep "1/2-1/2" from breaking at its hyphen when the line wraps.
+    if (result) return `${result.reason} · ${result.result.replace('-', `${WORD_JOINER}-${WORD_JOINER}`)}`;
     if (controller.thinking) return 'The robot is thinking…';
     if (controller.needsRetry()) return 'The robot could not move';
 
@@ -226,13 +263,23 @@ function statusText(): string {
 
 function updatePanel() {
     const moves = controller.history();
+    const ply = shownPly();
+    const shownMoves = viewPly === null ? moves : moves.slice(0, ply);
+    const game = shownGame();
     const bottom: Color = board.flipped ? 'b' : 'w';
-    fillStrip(stripBottom, bottom, moves);
-    fillStrip(stripTop, bottom === 'w' ? 'b' : 'w', moves);
+    fillStrip(stripBottom, bottom, shownMoves, game);
+    fillStrip(stripTop, bottom === 'w' ? 'b' : 'w', shownMoves, game);
 
-    statusLine.textContent = statusText();
+    if (controller.result && viewPly !== null) statusLine.replaceChildren(...reviewStatus(viewPly));
+    else statusLine.textContent = statusText();
     retryButton.hidden = !controller.needsRetry();
-    renderHistory(historyList, moves, prefs.notation, controller.result?.result);
+    renderHistory(historyList, moves, prefs.notation, ply, controller.result?.result);
+
+    const reviewing = isReviewing();
+    statusRow.classList.toggle('reviewing', reviewing);
+    historyList.classList.toggle('reviewable', reviewing);
+    reviewFirst.disabled = reviewPrev.disabled = ply === 0;
+    reviewNext.disabled = reviewLast.disabled = ply === moves.length;
 
     undoButton.disabled = !controller.canUndo();
     surrenderButton.disabled = !!controller.result;
@@ -272,12 +319,90 @@ $('new-btn').addEventListener('click', async () => {
     startGame(controller.mode);
 });
 
+// ---- Review --------------------------------------------------------------------------------------
+// Once the game is over, the board can step back and forward through its moves: the buttons around
+// the status line, a click on a move in the list, a swipe on the board, or the arrow keys.
+
+// The number of plies on the board while reviewing, or null for the live (final) position.
+let viewPly: number | null = null;
+// Set from the end of the game until the game-over card opens, so a quick step back isn't then covered
+// by the card (which shows the final result).
+let overPending = false;
+
+const isReviewing = () => !!controller.result && !overPending;
+const shownPly = () => viewPly ?? controller.history().length;
+
+/** The position on the board. Each verbose move carries the position after it, so nothing is replayed. */
+function shownGame(): Chess {
+    if (viewPly === null) return controller.game;
+    return new Chess(viewPly ? controller.history()[viewPly - 1].after : DEFAULT_POSITION);
+}
+
+function showPly(ply: number) {
+    const moves = controller.history();
+    const from = shownPly();
+    const to = Math.min(Math.max(ply, 0), moves.length);
+    if (!isReviewing() || to === from) return;
+
+    viewPly = to === moves.length ? null : to;
+    const game = shownGame();
+    // A single step forward animates like the move itself (a promoting pawn turns into its piece).
+    const step = to === from + 1 ? moves[to - 1] : null;
+    board.render(game, { move: step, animate: true, lastMove: moves[to - 1] });
+    if (step) playSound(game.isCheck() ? 'check' : step.captured ? 'capture' : 'move');
+    updatePanel();
+}
+
+reviewFirst.addEventListener('click', () => showPly(0));
+reviewPrev.addEventListener('click', () => showPly(shownPly() - 1));
+reviewNext.addEventListener('click', () => showPly(shownPly() + 1));
+reviewLast.addEventListener('click', () => showPly(Infinity));
+
+historyList.addEventListener('click', (e) => {
+    const ply = (e.target as Element).closest<HTMLElement>('.ply')?.dataset.ply;
+    if (ply && isReviewing()) showPly(Number(ply));
+});
+
+// Swipe left for the next move, right for the previous one. The board has touch-action: none, so the
+// browser doesn't scroll or navigate. The release is watched on the window: a mouse can leave the board.
+let swipe: { id: number; x: number; y: number } | null = null;
+
+$('board').addEventListener('pointerdown', (e) => {
+    swipe = isReviewing() && e.isPrimary ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null;
+});
+window.addEventListener('pointercancel', () => {
+    swipe = null;
+});
+window.addEventListener('pointerup', (e) => {
+    if (!swipe || e.pointerId !== swipe.id) return;
+    const dx = e.clientX - swipe.x;
+    const dy = e.clientY - swipe.y;
+    swipe = null;
+    if (Math.abs(dx) >= 40 && Math.abs(dx) > 1.5 * Math.abs(dy)) showPly(shownPly() + (dx < 0 ? 1 : -1));
+});
+
+// ←/→ step and Home/End jump. Captured before the board's own arrow-key handling: once the game is
+// over no piece can move, so the board's square-by-square focus (↑/↓ too) has no use and is switched off.
+document.addEventListener('keydown', (e) => {
+    if (!isReviewing() || app.dataset.screen !== 'game' || e.altKey || e.ctrlKey || e.metaKey) return;
+    if ((e.target as Element).closest('input, select, textarea, dialog')) return;
+    const targets: Record<string, number | null> = {
+        ArrowLeft: shownPly() - 1, ArrowRight: shownPly() + 1, Home: 0, End: Infinity, ArrowUp: null, ArrowDown: null,
+    };
+    if (!(e.key in targets)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const ply = targets[e.key];
+    if (ply !== null) showPly(ply);
+}, { capture: true });
+
 // ---- Game over -----------------------------------------------------------------------------------
 
 const overDialog = $<HTMLDialogElement>('over-dialog');
 let overTimer = 0;
 
 function onGameOver(result: GameResult) {
+    overPending = true;
     board.refresh();
     updatePanel();
 
@@ -295,11 +420,19 @@ function onGameOver(result: GameResult) {
     $('over-icon').dataset.piece = `${result.winner ?? 'w'}K`;
     $('over-icon').classList.toggle('draw', !result.winner);
 
-    // A short pause to see the final move first. Skipped if the user has meanwhile started another game
-    // or left for the menu.
+    const stats = recordGame(mode, result);
+    const record = $('over-record');
+    record.hidden = mode.kind !== 'robot';
+    if (mode.kind === 'robot') record.textContent = `Level ${mode.level}: ${formatScore(stats.robot[mode.level])}`;
+
+    // A short pause to see the final move first, then review starts and the card opens. The card is
+    // skipped if the user has meanwhile started another game or left for the menu.
     clearTimeout(overTimer);
     overTimer = window.setTimeout(() => {
-        if (controller.result !== result || app.dataset.screen !== 'game') return;
+        if (controller.result !== result) return;
+        overPending = false;
+        updatePanel();
+        if (app.dataset.screen !== 'game') return;
         overDialog.returnValue = '';
         overDialog.showModal();
         if (humanWon) confetti();
@@ -309,6 +442,9 @@ function onGameOver(result: GameResult) {
 overDialog.addEventListener('close', () => {
     if (overDialog.returnValue === 'again') startGame(controller.mode);
     else if (overDialog.returnValue === 'menu') $('menu-btn').click();
+    // Land keyboard users on ◀. A game that ended before any move has nothing to step through (all the
+    // nav buttons are disabled), so focus goes to New game instead.
+    else if (overDialog.returnValue === 'review') (reviewPrev.disabled ? $('new-btn') : reviewPrev).focus();
 });
 
 // ---- Dialogs -------------------------------------------------------------------------------------
