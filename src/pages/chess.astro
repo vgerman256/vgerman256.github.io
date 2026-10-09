@@ -225,6 +225,15 @@ import PlayerStrip from '../components/chess/PlayerStrip.astro';
         background: var(--img, none) center / contain no-repeat;
     }
 
+    /* Black piece icons (captured list, move list, review status) get a thin light outline on the dark panels. */
+    @media (prefers-color-scheme: dark) {
+        .chess-app .fig[data-piece^='b'] {
+            filter:
+                drop-shadow(0 0 0.5px rgb(255 255 255 / 0.75))
+                drop-shadow(0 0 0.5px rgb(255 255 255 / 0.75));
+        }
+    }
+
     /* ---- Board themes ---- */
     [data-board] {
         --hl-last: rgb(205 210 106 / 0.55);

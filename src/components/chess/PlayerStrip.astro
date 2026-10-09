@@ -103,6 +103,10 @@ const { id, area } = Astro.props;
         flex: none;
         width: calc(var(--strip) * 0.55);
         height: calc(var(--strip) * 0.55);
+    }
+
+    /* Pieces overlap a little; the first keeps its margin so the row's overflow doesn't clip it. */
+    .captured :global(.fig + .fig) {
         margin-left: calc(var(--strip) * -0.18);
     }
 
