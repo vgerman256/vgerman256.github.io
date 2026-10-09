@@ -1,6 +1,6 @@
 // Sounds synthesized with Web Audio (no audio files to load or license), and a short confetti burst.
 
-export type SoundKind = 'move' | 'capture' | 'check' | 'win' | 'lose' | 'draw';
+export type SoundKind = 'move' | 'capture' | 'check' | 'win' | 'lose' | 'draw' | 'tick';
 
 let audio: AudioContext | null = null;
 let noise: AudioBuffer | null = null;
@@ -43,6 +43,10 @@ export function playSound(kind: SoundKind) {
             break;
         case 'draw':
             [523, 494].forEach((f, i) => tone(ac, t + i * 0.18, f, 0.3));
+            break;
+        case 'tick':
+            // The clock's last seconds: a quiet, high click.
+            knock(ac, t, 0.2, 3000);
             break;
     }
 }

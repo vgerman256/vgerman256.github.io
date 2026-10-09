@@ -1,6 +1,7 @@
 // Entry point: wires the menu, the board, the side panel, the dialogs and the settings to the GameController.
 import { Chess, DEFAULT_POSITION, type Color, type Move, type PieceSymbol, type Square } from 'chess.js';
 import { BoardView } from './board-view';
+import { formatClock, isLowTime, type TimeControl } from './clock';
 import { confetti, playSound, setSoundEnabled } from './effects';
 import { GameController, colorName, modeFromSaved, type GameMode, type GameResult } from './game';
 import { formatMove, renderCaptured, renderHistory } from './notation';
@@ -36,8 +37,12 @@ type Screen = 'menu' | 'game';
 function showScreen(screen: Screen) {
     const apply = () => {
         app.dataset.screen = screen;
+        if (screen === 'menu') {
+            // A game left for the menu doesn't lose time; it waits paused.
+            controller.pauseClock();
+            updateStats();
+        }
         updateContinue();
-        if (screen === 'menu') updateStats();
         // The move list can only scroll to the latest move while it is visible.
         if (screen === 'game') updatePanel();
     };
@@ -81,6 +86,8 @@ updateLevelLabel();
 levelInput.addEventListener('input', updateLevelLabel);
 setRadio('color', prefs.color);
 setRadio('menu-orientation', prefs.localOrientation);
+setRadio('robot-clock', prefs.robotClock);
+setRadio('local-clock', prefs.localClock);
 
 function setRadio(name: string, value: string) {
     const input = document.querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`);
@@ -92,9 +99,9 @@ function getRadio(name: string): string {
 }
 
 function modeFromPrefs(kind: GameMode['kind']): GameMode {
-    if (kind === 'local') return { kind, orientation: prefs.localOrientation };
+    if (kind === 'local') return { kind, orientation: prefs.localOrientation, clock: prefs.localClock };
     const humanColor: Color = prefs.color === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : prefs.color;
-    return { kind, level: prefs.level, humanColor };
+    return { kind, level: prefs.level, humanColor, clock: prefs.robotClock };
 }
 
 function startGame(mode: GameMode) {
@@ -106,12 +113,14 @@ function startGame(mode: GameMode) {
 $('start-robot').addEventListener('click', () => {
     prefs.level = clampLevel(levelInput.value);
     prefs.color = getRadio('color') as Prefs['color'];
+    prefs.robotClock = getRadio('robot-clock') as TimeControl;
     savePrefs(prefs);
     startGame(modeFromPrefs('robot'));
 });
 
 $('start-local').addEventListener('click', () => {
     prefs.localOrientation = getRadio('menu-orientation') as Prefs['localOrientation'];
+    prefs.localClock = getRadio('local-clock') as TimeControl;
     savePrefs(prefs);
     syncSettingsForm();
     startGame(modeFromPrefs('local'));
@@ -120,9 +129,10 @@ $('start-local').addEventListener('click', () => {
 const continueTile = $('continue-tile');
 
 function describeMode(mode: GameMode): string {
+    const clock = mode.clock === 'off' ? '' : ` · ${mode.clock}`;
     return mode.kind === 'robot'
-        ? `vs Robot · level ${mode.level} · you play ${colorName(mode.humanColor)}`
-        : '2 players on this device';
+        ? `vs Robot · level ${mode.level} · you play ${colorName(mode.humanColor)}${clock}`
+        : `2 players on this device${clock}`;
 }
 
 function updateContinue() {
@@ -185,6 +195,7 @@ const undoButton = $<HTMLButtonElement>('undo-btn');
 const pgnButton = $<HTMLButtonElement>('pgn-btn');
 const surrenderButton = $<HTMLButtonElement>('surrender-btn');
 const retryButton = $<HTMLButtonElement>('retry-btn');
+const pauseOverlay = $<HTMLButtonElement>('pause-overlay');
 
 let flipTimer = 0;
 
@@ -223,6 +234,7 @@ function onPosition(move: Move | null, animate: boolean) {
 
 /** Fills a player strip for `game`, the position on the board, after `moves` (the moves up to it). */
 function fillStrip(strip: HTMLElement, color: Color, moves: Move[], game: Chess) {
+    strip.dataset.color = color;
     strip.querySelector<HTMLElement>('.player-color')!.dataset.piece = `${color}K`;
     strip.querySelector('.player-name')!.textContent = controller.playerName(color);
     strip.querySelector<HTMLElement>('.thinking')!.hidden = !(controller.thinking && game.turn() === color);
@@ -251,6 +263,7 @@ function statusText(): string {
     const result = controller.result;
     // Word joiners keep "1/2-1/2" from breaking at its hyphen when the line wraps.
     if (result) return `${result.reason} · ${result.result.replace('-', `${WORD_JOINER}-${WORD_JOINER}`)}`;
+    if (controller.isPaused()) return 'Paused';
     if (controller.thinking) return 'The robot is thinking…';
     if (controller.needsRetry()) return 'The robot could not move';
 
@@ -284,7 +297,67 @@ function updatePanel() {
     undoButton.disabled = !controller.canUndo();
     surrenderButton.disabled = !!controller.result;
     pgnButton.disabled = moves.length === 0;
+    renderClocks();
 }
+
+// ---- Clock ---------------------------------------------------------------------------------------
+// The clocks are redrawn ten times a second; only text and classes that changed are written.
+
+let lastTick = 0;
+
+function renderClocks() {
+    const clock = controller.clock;
+    const live = !controller.result && controller.hasMoves();
+    for (const strip of [stripTop, stripBottom]) {
+        const color = strip.dataset.color as Color;
+        const button = strip.querySelector<HTMLButtonElement>('.clock')!;
+        button.hidden = !clock.isClocked(color);
+        if (button.hidden) continue;
+
+        // In review, the time this player had at the shown move.
+        const ms = viewPly === null ? clock.timeLeft(color) : clock.timeAt(color, viewPly);
+        const text = formatClock(ms);
+        if (button.textContent !== text) button.textContent = text;
+        button.classList.toggle('running', clock.runningColor === color);
+        button.classList.toggle('low', isLowTime(ms));
+        button.disabled = !live;
+        const label = `${colorName(color)}'s clock. ${controller.isPaused() ? 'Resume' : 'Pause'} the game`;
+        if (button.title !== label) {
+            button.title = label;
+            button.setAttribute('aria-label', label);
+        }
+    }
+    pauseOverlay.hidden = !controller.isPaused();
+
+    // A soft tick each second of the last ten (if sound is on).
+    const runner = clock.runningColor;
+    const left = runner ? clock.timeLeft(runner) : Infinity;
+    const second = Math.ceil(left / 1000);
+    if (left < 10_000 && second !== lastTick) playSound('tick');
+    lastTick = second;
+}
+
+window.setInterval(() => {
+    if (app.dataset.screen === 'game' && controller.clock.runningColor) renderClocks();
+}, 100);
+
+function togglePause() {
+    if (controller.isPaused()) controller.resumeClock();
+    else controller.pauseClock();
+    board.refresh();
+    updatePanel();
+}
+
+for (const strip of [stripTop, stripBottom]) strip.querySelector('.clock')!.addEventListener('click', togglePause);
+pauseOverlay.addEventListener('click', togglePause);
+
+// Switching tabs or locking the phone pauses the game (and saves the times left).
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) return;
+    controller.pauseClock();
+    board.refresh();
+    updatePanel();
+});
 
 $('undo-btn').addEventListener('click', () => controller.undo());
 retryButton.addEventListener('click', () => controller.retryRobot());
@@ -403,6 +476,8 @@ let overTimer = 0;
 
 function onGameOver(result: GameResult) {
     overPending = true;
+    // A time out can end the game while the promotion picker is open; its move is dropped.
+    if (promotionDialog.open) promotionDialog.close();
     board.refresh();
     updatePanel();
 
@@ -547,7 +622,7 @@ settingsForm.addEventListener('change', () => {
     // The 2-player board setting also applies to a 2-player game in progress.
     const mode = controller.mode;
     if (mode.kind === 'local' && mode.orientation !== prefs.localOrientation) {
-        controller.mode = { kind: 'local', orientation: prefs.localOrientation };
+        controller.mode = { ...mode, orientation: prefs.localOrientation };
         applyModeView();
     }
     updatePanel();

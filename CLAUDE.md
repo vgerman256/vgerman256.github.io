@@ -63,9 +63,9 @@ No client-side UI framework. Vanilla Astro components + plain CSS only, on new p
 │   ├── lib/icons.ts            # icon names shared by PostIcon and the posts schema
 │   ├── lib/posts.ts            # getSortedPosts(): the one post order used by the home list and newer/older links
 │   ├── lib/reading-time.mjs    # remark plugin
-│   └── scripts/chess/          # chess client code: main (wiring), game (flow), board-view, notation, engine, effects, prefs, stats (results + rating estimate)
+│   └── scripts/chess/          # chess client code: main (wiring), game (flow), board-view, notation, engine, effects, prefs, stats (results + rating estimate), clock (optional chess clock)
 ├── astro.config.mjs, tsconfig.json, package.json, pnpm-lock.yaml
-└── specs/                      # versioned plans: blog-spec-v1.0.md (original design), chess-overhaul-v2.0.md, chess-review-and-stats-v2.2.md (post-game review, stats), chess-known-issues.md
+└── specs/                      # versioned plans: blog-spec-v1.0.md (original design), chess-overhaul-v2.0.md, chess-review-and-stats-v2.2.md (post-game review, stats), chess-clock-v2.4.md (optional clock), chess-known-issues.md
 ```
 
 ## Content authoring — adding a post
