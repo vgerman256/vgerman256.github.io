@@ -1,5 +1,6 @@
 ---
 import ChessIcon from './ChessIcon.astro';
+import { timeControls } from '../../scripts/chess/clock';
 
 const heroPieces = ['wR', 'bN', 'wB', 'bQ', 'wK', 'bB', 'wN', 'bR'];
 ---
@@ -40,6 +41,13 @@ const heroPieces = ['wR', 'bN', 'wB', 'bQ', 'wK', 'bB', 'wN', 'bR'];
                 <label><input type="radio" name="color" value="random" /><span class="random-icon" aria-hidden="true">?</span>Random</label>
                 <label><input type="radio" name="color" value="b" /><span class="pc" data-piece="bK"></span>Black</label>
             </fieldset>
+            <fieldset class="segmented clock-choice" aria-describedby="robot-clock-note">
+                <legend>Clock</legend>
+                {timeControls.map((tc) => (
+                    <label><input type="radio" name="robot-clock" value={tc} checked={tc === 'off'} />{tc === 'off' ? 'Off' : tc}</label>
+                ))}
+                <p class="clock-note" id="robot-clock-note">Minutes + seconds per move. Only your clock runs.</p>
+            </fieldset>
             <button type="button" class="btn primary" id="start-robot">Start game</button>
         </article>
 
@@ -55,6 +63,13 @@ const heroPieces = ['wR', 'bN', 'wB', 'bQ', 'wK', 'bB', 'wN', 'bR'];
                 <legend>Board</legend>
                 <label><input type="radio" name="menu-orientation" value="face" checked />Face to face</label>
                 <label><input type="radio" name="menu-orientation" value="flip" />Flip each move</label>
+            </fieldset>
+            <fieldset class="segmented clock-choice" aria-describedby="local-clock-note">
+                <legend>Clock</legend>
+                {timeControls.map((tc) => (
+                    <label><input type="radio" name="local-clock" value={tc} checked={tc === 'off'} />{tc === 'off' ? 'Off' : tc}</label>
+                ))}
+                <p class="clock-note" id="local-clock-note">Minutes each + seconds added per move.</p>
             </fieldset>
             <button type="button" class="btn primary" id="start-local">Start game</button>
         </article>
@@ -237,6 +252,20 @@ const heroPieces = ['wR', 'bN', 'wB', 'bQ', 'wK', 'bB', 'wN', 'bR'];
 
     .tile-online {
         opacity: 0.7;
+    }
+
+    /* Five short choices: narrower buttons than the other rows, so they fit on one line on a phone. */
+    .clock-choice label {
+        min-width: 0;
+        padding-inline: 0.15rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .clock-note {
+        flex-basis: 100%;
+        margin: 0;
+        color: var(--g-muted);
+        font-size: 0.8rem;
     }
 
     .badge {

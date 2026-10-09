@@ -1,5 +1,6 @@
 // Per-device settings and the saved game, kept in localStorage. Storage can be missing or throw
 // (private windows, blocked site data), so every access is guarded and falls back to defaults.
+import { timeControls, type SavedClock, type TimeControl } from './clock';
 
 export type BoardTheme = 'wood' | 'green' | 'blue' | 'slate';
 export type PieceSet = 'cburnett' | 'chessnut';
@@ -15,16 +16,19 @@ export interface Prefs {
     localOrientation: LocalOrientation;
     level: number;
     color: ColorChoice;
+    robotClock: TimeControl;
+    localClock: TimeControl;
 }
 
 // The same key and fields as the pre-2.0 page (public/js/chess-game.js), so its saved games still restore.
-// `humanColor` and `orientation` are new and optional.
+// `humanColor`, `orientation` and `clock` are new and optional.
 export interface SavedGame {
     pgn: string;
     difficulty: number | string;
     withRobot: boolean;
     humanColor?: 'w' | 'b';
     orientation?: LocalOrientation;
+    clock?: SavedClock;
 }
 
 const PREFS_KEY = 'chess_prefs';
@@ -38,6 +42,8 @@ const defaultPrefs: Prefs = {
     localOrientation: 'face',
     level: 3,
     color: 'w',
+    robotClock: 'off',
+    localClock: 'off',
 };
 
 const choices = {
@@ -46,6 +52,8 @@ const choices = {
     notation: ['figurine', 'san', 'coords'],
     localOrientation: ['face', 'flip'],
     color: ['w', 'b', 'random'],
+    robotClock: timeControls,
+    localClock: timeControls,
 } as const;
 
 export function read(key: string): unknown {

@@ -1,5 +1,6 @@
 ---
-// One player's row above or below the board: color, name, "thinking" dots, captured pieces and material.
+// One player's row above or below the board: color, name, "thinking" dots, captured pieces and material,
+// and the clock when the game has one (main.ts: renderClocks).
 interface Props {
     id: string;
     area: 'top' | 'bottom';
@@ -13,6 +14,7 @@ const { id, area } = Astro.props;
     <span class="player-name"></span>
     <span class="thinking" hidden aria-hidden="true"><span></span><span></span><span></span></span>
     <span class="captured"></span>
+    <button type="button" class="clock" hidden></button>
 </div>
 
 <style>
@@ -116,5 +118,64 @@ const { id, area } = Astro.props;
         font-family: var(--font-mono);
         font-size: 0.8rem;
         font-weight: 600;
+    }
+
+    /* Waiting: dim. Running: accent, like the to-move ring. Under 20 s: red, and pulsing while it runs. */
+    .clock {
+        flex: none;
+        min-width: calc(var(--strip) * 1.7);
+        height: calc(var(--strip) * 0.78);
+        padding: 0 0.45rem;
+        border: 1px solid var(--g-border);
+        border-radius: 8px;
+        background: var(--g-surface-2);
+        color: var(--g-muted);
+        font: 600 calc(var(--strip) * 0.42) / 1 var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .clock[hidden] {
+        display: none;
+    }
+
+    /* Before the first move and after the game there is nothing to pause. */
+    .clock:disabled {
+        cursor: default;
+    }
+
+    .clock:focus-visible {
+        outline: 2px solid var(--g-accent);
+        outline-offset: 2px;
+    }
+
+    .clock:global(.running) {
+        border-color: var(--g-accent);
+        background: var(--g-accent);
+        color: var(--g-accent-text);
+    }
+
+    .clock:global(.low) {
+        border-color: #D93025;
+        color: #D93025;
+    }
+
+    .clock:global(.low.running) {
+        background: #D93025;
+        color: #FFF;
+        animation: clock-pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes clock-pulse {
+        50% {
+            opacity: 0.7;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .clock:global(.low.running) {
+            animation: none;
+        }
     }
 </style>

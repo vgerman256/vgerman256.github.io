@@ -3,12 +3,13 @@
 // apart from what new features need (the robot can play White). Known bugs that were deliberately
 // left alone are listed in specs/chess-known-issues.md.
 import { Chess, type Color, type Move, type PieceSymbol } from 'chess.js';
+import { ChessClock, formatPgnClock, isTimeControl, pgnTimeControl, type SavedClock, type TimeControl } from './clock';
 import { getBestMove, setEngineLevel } from './engine';
 import { clampLevel, saveGame, type LocalOrientation, type SavedGame } from './prefs';
 
 export type GameMode =
-    | { kind: 'robot'; level: number; humanColor: Color }
-    | { kind: 'local'; orientation: LocalOrientation };
+    | { kind: 'robot'; level: number; humanColor: Color; clock: TimeControl }
+    | { kind: 'local'; orientation: LocalOrientation; clock: TimeControl };
 
 export interface GameResult {
     result: '1-0' | '0-1' | '1/2-1/2';
@@ -35,15 +36,23 @@ export const colorName = (color: Color) => (color === 'w' ? 'White' : 'Black');
 
 /** The mode a saved game was played in. Fields missing from older saves get the pre-2.0 defaults. */
 export function modeFromSaved(state: SavedGame): GameMode {
+    const clock = isTimeControl(state.clock?.control) ? state.clock.control : 'off';
     return state.withRobot !== false
-        ? { kind: 'robot', level: clampLevel(state.difficulty ?? 1), humanColor: state.humanColor ?? 'w' }
-        : { kind: 'local', orientation: state.orientation ?? 'face' };
+        ? { kind: 'robot', level: clampLevel(state.difficulty ?? 1), humanColor: state.humanColor ?? 'w', clock }
+        : { kind: 'local', orientation: state.orientation ?? 'face', clock };
 }
 const opponent = (color: Color): Color => (color === 'w' ? 'b' : 'w');
 
+/** Whether `color` has only a king, or a king and a single bishop or knight: too little to ever checkmate. */
+function cannotMate(game: Chess, color: Color): boolean {
+    const pieces = game.board().flat().filter((p) => p && p.color === color && p.type !== 'k');
+    return pieces.length === 0 || (pieces.length === 1 && (pieces[0]!.type === 'b' || pieces[0]!.type === 'n'));
+}
+
 export class GameController {
     game = new Chess();
-    mode: GameMode = { kind: 'local', orientation: 'face' };
+    mode: GameMode = { kind: 'local', orientation: 'face', clock: 'off' };
+    clock = new ChessClock((color) => this.timeOut(color));
     result: GameResult | null = null;
     thinking = false;
     // Set when the robot failed to produce a move; the UI then offers retryRobot().
@@ -72,9 +81,28 @@ export class GameController {
         if (this.needsRetry()) void this.robotTurnIfNeeded();
     }
 
-    /** The color the user may move right now, or null while the robot thinks or the game is over. */
+    /** The color the user may move right now, or null while the robot thinks, the clock is paused or the game is over. */
     movableColor(): Color | null {
-        return this.result || this.thinking || this.isRobotTurn() ? null : this.game.turn();
+        return this.result || this.thinking || this.isPaused() || this.isRobotTurn() ? null : this.game.turn();
+    }
+
+    /** The game is paused by the user, a hidden page or a visit to the menu. */
+    isPaused(): boolean {
+        return this.clock.paused && !this.result;
+    }
+
+    /** Pauses the clock of a game in progress and saves its times. */
+    pauseClock() {
+        if (!this.clock.enabled || this.result || !this.hasMoves() || this.clock.paused) return;
+        this.clock.paused = true;
+        this.syncClock();
+        this.saveGameState();
+    }
+
+    resumeClock() {
+        if (!this.isPaused()) return;
+        this.clock.paused = false;
+        this.syncClock();
     }
 
     /** The moves played so far (cached; don't modify the array). */
@@ -126,7 +154,10 @@ export class GameController {
                 return false;
             }
 
-            this.reset(modeFromSaved(state), game);
+            this.reset(modeFromSaved(state), game, state.clock);
+            // A clock that was running comes back paused, so no time is lost before the player is ready.
+            this.clock.paused = this.clock.enabled && this.hasMoves();
+            this.syncClock();
             this.events.position(null, false);
             this.events.notify('Game restored!');
             void this.robotTurnIfNeeded();
@@ -139,9 +170,12 @@ export class GameController {
 
     /** Plays a legal move chosen by the user (promotion already resolved), then lets the robot reply. */
     async doMove(move: Move) {
+        // The game can end while a move is being chosen (time out with the promotion picker open).
+        if (this.result) return;
         try {
             const moveResult = this.game.move(move);
             this.version++;
+            this.clocked(moveResult);
             this.events.position(moveResult, true);
 
             const canMove = this.handleGameState(moveResult);
@@ -175,6 +209,8 @@ export class GameController {
         }
 
         this.version++;
+        this.clock.truncate(this.plyCount());
+        this.syncClock();
         this.events.position(null, true);
         this.saveGameState();
     }
@@ -190,10 +226,14 @@ export class GameController {
         this.finish({ result: loser === 'w' ? '0-1' : '1-0', winner: opponent(loser), reason: msg });
     }
 
-    /** PGN with the standard header tags, for copying to other chess tools. */
+    /** PGN with the standard header tags (and clock times, if any), for copying to other chess tools. */
     pgn(): string {
         const copy = new Chess();
-        copy.loadPgn(this.game.pgn());
+        this.history().forEach((move, i) => {
+            copy.move(move.san);
+            const mark = this.clock.marks[i];
+            if (mark != null) copy.setComment(`[%clk ${formatPgnClock(mark)}]`);
+        });
         const now = new Date();
         const date = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
         copy.setHeader('Event', this.mode.kind === 'robot' ? 'Game vs Stockfish' : 'Casual game');
@@ -202,10 +242,11 @@ export class GameController {
         copy.setHeader('White', this.playerName('w'));
         copy.setHeader('Black', this.playerName('b'));
         copy.setHeader('Result', this.result?.result ?? '*');
+        if (this.clock.enabled) copy.setHeader('TimeControl', pgnTimeControl(this.clock.control));
         return copy.pgn();
     }
 
-    private reset(mode: GameMode, game: Chess) {
+    private reset(mode: GameMode, game: Chess, savedClock?: SavedClock) {
         this.generation++;
         this.mode = mode;
         this.game = game;
@@ -213,6 +254,7 @@ export class GameController {
         this.result = null;
         this.robotFailed = false;
         this.setThinking(false);
+        this.clock.reset(mode.clock, mode.kind === 'robot' ? [mode.humanColor] : ['w', 'b'], this.plyCount(), savedClock);
         if (mode.kind === 'robot') {
             // Also starts the engine early, so its first reply isn't delayed by loading the worker.
             setEngineLevel(mode.level).catch((error) => console.warn('Stockfish failed to start', error));
@@ -232,6 +274,7 @@ export class GameController {
 
             const computerMoveResult = this.game.move(computerMove);
             this.version++;
+            this.clocked(computerMoveResult);
             this.events.position(computerMoveResult, true);
             this.handleGameState(computerMoveResult);
             this.saveGameState();
@@ -285,8 +328,36 @@ export class GameController {
 
     private finish(result: GameResult) {
         this.result = result;
+        this.syncClock();
         saveGame(null);
         this.events.over(result);
+    }
+
+    /** Records a move on the clock and starts the next player's clock. */
+    private clocked(move: Move) {
+        this.clock.moved(move.color, this.plyCount());
+        this.syncClock();
+    }
+
+    /** No clock runs before White's first move or after the game; otherwise the side to move's clock does. */
+    private syncClock() {
+        this.clock.run(this.result || !this.hasMoves() ? null : this.game.turn());
+    }
+
+    private timeOut(color: Color) {
+        if (this.result) return;
+        const winner = opponent(color);
+        const msg = `${colorName(color)} ran out of time`;
+
+        this.generation++;
+        this.setThinking(false);
+        if (cannotMate(this.game, winner)) {
+            this.events.notify('Draw!');
+            this.finish({ result: '1/2-1/2', winner: null, reason: `${msg}, but ${colorName(winner)} can't checkmate` });
+        } else {
+            this.events.notify(`${msg}!`);
+            this.finish({ result: winner === 'w' ? '1-0' : '0-1', winner, reason: msg });
+        }
     }
 
     private saveGameState() {
@@ -297,6 +368,7 @@ export class GameController {
             difficulty: mode.kind === 'robot' ? mode.level : 1,
             withRobot: mode.kind === 'robot',
             ...(mode.kind === 'robot' ? { humanColor: mode.humanColor } : { orientation: mode.orientation }),
+            clock: this.clock.save(),
         });
     }
 
