@@ -330,5 +330,3 @@ And one more, which I didn't expect. When I started this post, I thought I knew 
 I'd never have asked any of this while just using the scripts. As long as they run, "it works" is good enough. Explaining them to someone else is different: every "I think it stops on errors" has to be checked, because a reader will ask. It was the same vague feeling I'd been ignoring all along, and writing finally made me look into it.
 
 So here's my small rant: write things down, even if it's just a long PR description. Maybe nobody will read it (though I hope you did), but you'll understand your own topic much better afterwards. I meant to write a funny post about an AI humiliating me, and I finished it actually understanding PowerShell error handling.
-
-Final score: AI one, five. Me, zero. AI two, one. And I'm still the one who has to merge the PR.
