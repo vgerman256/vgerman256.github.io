@@ -203,8 +203,7 @@ export class GameController {
                 undone = this.game.undo();
             } while (undone && undone.color !== mode.humanColor);
         } else {
-            // As before: two plies, i.e. both players' last moves (specs/chess-known-issues.md #4).
-            this.game.undo();
+            // Two players: take back just the last move (specs/chess-known-issues.md #4).
             this.game.undo();
         }
 

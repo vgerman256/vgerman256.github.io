@@ -39,8 +39,7 @@ On the old canvas board you could select and move Black's pieces, or press Undo,
 
 `undoMove` always undoes two plies. Against the robot that is right: it takes back your move and the robot's reply. With two players it also takes back the previous player's move.
 
-- **Status:** open. `GameController.undo()` keeps the two-ply behavior for 2-player games.
-- **Fix idea:** in 2-player mode, undo one ply.
+- **Status:** fixed in [v2.5](chess-undo-and-promotion-fixes-v2.5.md). In 2-player games, `GameController.undo()` takes back one ply. Against the robot it still goes back to the user's turn.
 
 ## 5. Undo with fewer than two moves leaves the screen out of date
 
@@ -74,6 +73,7 @@ The surrender dialog said "Surrender to the robot?" even in 2-player games, and 
 The old promotion modal had no way out. The game was stuck until a piece was chosen.
 
 - **Status:** gone. Esc or a click outside the picker cancels it and returns the pawn.
+- **Related regression (2.0–2.4):** on touch screens, tapping the promotion square promoted to a queen at once. The same tap's click landed on the picker's Queen button. Fixed in [v2.5](chess-undo-and-promotion-fixes-v2.5.md).
 
 ## 10. Minor
 
