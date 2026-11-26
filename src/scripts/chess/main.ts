@@ -526,6 +526,17 @@ overDialog.addEventListener('close', () => {
 
 const promotionDialog = $<HTMLDialogElement>('promotion-dialog');
 
+// A tap on the promotion square opens the picker on pointerdown, and the click the same tap fires when
+// the finger lifts lands on the Queen button now under it. So a pointer click picks a piece only if its
+// press started inside the picker; keyboard clicks (detail 0) always count.
+let pressedInPicker = false;
+promotionDialog.addEventListener('pointerdown', () => {
+    pressedInPicker = true;
+});
+promotionDialog.addEventListener('click', (e) => {
+    if (e.detail > 0 && !pressedInPicker) e.preventDefault();
+}, true);
+
 function choosePromotion(color: Color, to: Square): Promise<PieceSymbol | null> {
     return new Promise((resolve) => {
         for (const button of promotionDialog.querySelectorAll<HTMLButtonElement>('button[value]')) {
@@ -540,6 +551,7 @@ function choosePromotion(color: Color, to: Square): Promise<PieceSymbol | null> 
         promotionDialog.style.top = `${fromTop ? rect.top : rect.bottom - rect.width * 4}px`;
 
         promotionDialog.returnValue = '';
+        pressedInPicker = false;
         promotionDialog.addEventListener('close', () => {
             resolve((promotionDialog.returnValue || null) as PieceSymbol | null);
         }, { once: true });
